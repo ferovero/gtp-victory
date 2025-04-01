@@ -1,0 +1,6 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.https://nrrbmpyrgvnsstepfwaj.supabase.co
+const supabaseAnonKey = process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ycmJtcHlyZ3Zuc3N0ZXBmd2FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzI3MzEsImV4cCI6MjA1OTAwODczMX0.V7iJxnSGHsXBpQLm9f7zfolt2xhvVdZJbXc-qQ90NOk
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
