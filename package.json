@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@builder.io/react": "^8.0.12",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
