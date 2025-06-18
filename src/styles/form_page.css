@@ -1,0 +1,101 @@
+/* Main Container */
+/* Main Container */
+.css-1rs33wg.builder-block {
+  display: flex;
+  flex-direction: column;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* Logo */
+.css-nig1bt.builder-block {
+  height: 60px;
+  width: 240px;
+  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+/* Logo Nodes */
+.css-781yh5 {
+  width: 100%;
+  padding-top: 100%;
+  pointer-events: none;
+  font-size: 0px;
+}
+
+/* Logo Image */
+.css-1hbf805 {
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+  object-fit: contain;
+  object-position: center center;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0px;
+  top: 0px;
+}
+
+/* Form */
+.css-86zdk2.builder-block {
+  background: rgba(64, 65, 79, 0.9);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+  width: 100%;
+  max-width: 400px !important;
+}
+/* Heading */
+.css-1nt83du.builder-block {
+  color: rgb(255, 255, 255);
+  font-size: 24px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+/* Blocks */
+.css-rn8l1b.builder-block {
+  margin-bottom: 1.5rem;
+}
+.css-1tzgbp3.builder-block {
+  display: block;
+  color: rgb(255, 255, 255);
+  margin-bottom: 0.5rem;
+  font-size: 14px;
+}
+
+/* Input */
+.css-14mpe92.builder-block {
+  width: 100% !important;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgb(86, 88, 105);
+  background: rgb(64, 65, 79) !important;
+  color: rgb(255, 255, 255);
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+/* Button */
+.css-6a9sin.builder-block {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgb(19, 170, 86);
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.error-msg {
+  font-size: 0.815rem;
+  color: red;
+  margin-bottom: 0.5rem;
+}

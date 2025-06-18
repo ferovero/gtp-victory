@@ -1,0 +1,445 @@
+/* === 0) Definice Inter fontů z lokálních souborů === */
+:root {
+  --nav-height: 0px;
+  --asidebar-width: 260px;
+  --dark-color: #202123;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/Inter/Inter-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/fonts/Inter/Inter-Bold.woff2") format("woff2");
+  font-display: swap;
+}
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box !important;
+}
+*:not(button, input, textarea) {
+  color: white;
+}
+/* === 1) Reset margin/padding na rootu + full-bleed + skrytí horizontálního scrollu === */
+html,
+body,
+#__next {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: #000;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+/* === 2) Safe-area pouze nahoře a dole (iPhone notch) === */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* === 3) Globální font (Inter) === */
+html,
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* === 4) Sticky header === */
+/* Ujisti se, že ve svých Builder stránkách máš na menu třídu my-sticky-header */
+.my-sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: #000;
+}
+/* odsazení obsahu ihned pod headerem */
+#__next > .my-sticky-header + * {
+  margin-top: 80px; /* uprav na skutečnou výšku tvého menu */
+}
+
+/* === 5) Zbytek Builder obsahu full-width === */
+.builder-component {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* ── Force header section to be fully opaque ── */
+.builder-component > div:first-child {
+  background-color: #000 !important; /* plná černá */
+  opacity: 1 !important; /* žádná průhlednost */
+  backdrop-filter: none !important; /* žádný blur */
+}
+
+/* ── Ať se ten header obsahuje nad ostatním ── */
+.builder-component > div:first-child {
+  position: sticky !important;
+  top: 0;
+  z-index: 1000 !important;
+}
+
+.css-yuvktl.builder-block {
+  background: rgb(52, 53, 65);
+  display: flex;
+  flex-direction: column;
+  -webkit-box-align: center;
+  align-items: center;
+  /* min-height: 100vh; */
+  width: 100%;
+}
+
+.builder-2c2b99b230504b7d8a239ff528137758:focus {
+  outline: none;
+  border-color: #10a37f;
+  box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+}
+
+button {
+  cursor: pointer;
+}
+/* Modal Style */
+.modal_container {
+  top: 0;
+  left: 0;
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  isolation: isolate;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000;
+  background-color: transparent;
+  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.modal_container .css-1rs33wg.builder-block {
+  min-height: 100% !important;
+}
+.modal_bg_overlay {
+  background-color: red;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.modal_box {
+  width: 80%;
+  max-width: 400px;
+  height: auto;
+  /* background-color: rgb(28, 28, 35); */
+  background-color: #111d17;
+  /* padding: 1rem 1.8rem; */
+  border-radius: 0.75rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  color: white;
+  border: 1px solid #0e462b;
+}
+
+/* Dashbhoard */
+.dash_nav {
+  display: block;
+  unicode-bidi: isolate;
+  background: rgb(19, 19, 19);
+  padding: 1rem 0px;
+  position: fixed;
+  width: 100%;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0, 255, 117, 0.1);
+  top: -1px;
+  color: white;
+}
+.dash_nav_inner {
+  margin: 0px;
+  padding: 0px 0px 0px 2rem;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  width: 100%;
+}
+.css-1932uwd.builder-block {
+  display: flex;
+  gap: 2rem;
+  -webkit-box-align: center;
+  align-items: center;
+  margin-right: 1rem;
+  flex: 1 1 0%;
+  -webkit-box-pack: end;
+  justify-content: flex-end;
+}
+.css-fxzw8h.builder-block {
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.css-1932uwd.builder-block {
+  display: flex;
+  gap: 2rem;
+  -webkit-box-align: center;
+  align-items: center;
+  margin-right: 1rem;
+  flex: 1 1 0%;
+  -webkit-box-pack: end;
+  justify-content: flex-end;
+}
+.css-m55wq0.builder-block {
+  height: 40px;
+  width: 160px;
+  position: relative;
+  overflow: hidden;
+  margin-left: 1rem;
+}
+.css-1red9or.builder-block {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+  font-weight: bold;
+}
+.css-1wsksgf.builder-block {
+  background: transparent;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 2px solid rgb(19, 170, 86);
+}
+.css-9ey2vy.builder-block {
+  font-family: Silkscreen, display;
+  font-weight: 800;
+}
+.css-1414dy5.builder-block {
+  background: rgb(19, 19, 19);
+  padding: 1rem 0px;
+  position: fixed;
+  width: 100%;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0, 255, 117, 0.1);
+  top: -1px;
+}
+.css-129cj3r.builder-block {
+  margin: 0px;
+  padding: 0px 0px 0px 2rem;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  width: 100%;
+}
+.css-1tarmhn.builder-block {
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: 0.2s;
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  display: flex;
+  cursor: pointer;
+  background-color: rgb(19, 170, 86);
+  text-decoration: none;
+}
+.css-uom3m5.builder-block {
+  font-family: Silkscreen, display;
+  font-weight: 600;
+}
+.spin_loader {
+  animation: spin 1.2s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotateZ(0deg);
+  }
+  100% {
+    transform: rotateZ(-360deg);
+  }
+}
+/* Loader */
+.loader {
+  color: white;
+  margin-top: 2rem;
+  text-align: center;
+}
+/* Dashboard Asidebar Conversations item css when to hover over conversation item then then edit icon will be visible */
+.action_icon {
+  width: 16px;
+}
+#edit_icon {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s linear;
+}
+.dashboard_css_9rto4r_builder_block__u8_pj:hover #edit_icon {
+  opacity: 100;
+  visibility: visible;
+}
+
+/* Chat Css */
+.chat-responses {
+  /* background: #f9f9fb; */
+  border-radius: 12px;
+  padding: 20px;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  max-width: 800px;
+  margin: 0px auto;
+}
+
+/* Paragraphs */
+.chat-responses p {
+  margin: 1em 0;
+}
+
+/* Headings */
+.chat-responses h1,
+.chat-responses h2,
+.chat-responses h3 {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.chat-responses h1 {
+  font-size: 1.8em;
+}
+.chat-responses h2 {
+  font-size: 1.5em;
+}
+.chat-responses h3 {
+  font-size: 1.2em;
+}
+
+/* Lists */
+.chat-responses ul,
+.chat-responses ol {
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+
+.chat-responses li {
+  margin: 0.4em 0;
+}
+
+/* Blockquote */
+.chat-responses blockquote {
+  border-left: 4px solid #ccc;
+  background: #f1f1f5;
+  padding: 0.75em 1em;
+  margin: 1em 0;
+  color: #555;
+  font-style: italic;
+}
+
+/* Inline code */
+.chat-responses code {
+  background: #242323;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 90%;
+  color: #d63384;
+}
+
+/* Code block */
+.chat-responses pre {
+  background: #272822;
+  color: #f8f8f2;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.95em;
+  line-height: 1.5;
+  margin: 1em 0;
+}
+
+/* Horizontal rule */
+.chat-responses hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 2em 0;
+}
+
+/* Links */
+.chat-responses a {
+  color: #0077cc;
+  text-decoration: underline;
+}
+
+.chat-responses a:hover {
+  color: #005fa3;
+  text-decoration: none;
+}
+
+/* React Animation  */
+/* .slide-left-enter {
+  opacity: 0;
+  transform: translateX(-10px);
+} */
+
+/* .slide-left-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+} */
+.slide-left-exit {
+  opacity: 1;
+}
+
+.slide-left-exit-active {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+.slide-left-exit-active span {
+  text-decoration: line-through;
+}
+.collapsed_icon {
+  z-index: 1000;
+  cursor: pointer;
+}
+@media (max-width: 500px) {
+  .css-nig1bt.builder-block {
+    height: 31px !important;
+    width: 155px !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+.slide_up {
+  opacity: 0;
+  animation: slidUeUp 0.6 linear forwards;
+}
+
+@keyframes slidUeUp {
+  0% {
+    opacity: 0%;
+  }
+  100% {
+    opacity: 100%;
+  }
+}
+
+.profile_circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #555;
+  position: fixed;
+  right: 3rem;
+  top: 1.6rem;
+  z-index: 1000;
+}
