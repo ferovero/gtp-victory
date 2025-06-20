@@ -89,8 +89,12 @@ const ChatBoard = ({
       },
     });
   const autoHeight = useCallback((element, x) => {
-    element.style.height = x + 2 + "px";
-    element.style.height = element.scrollHeight - 2 + "px";
+    if (element.scrollHeight <= x) {
+        element.style.height = "auto";
+        return;
+    };
+    element.style.height = x + "px";
+    element.style.height = element.scrollHeight+2 + "px";
   }, []);
   //  ?? Controlling the messages textbox input
   const handleMessageChange = useCallback((e) => {
@@ -157,12 +161,6 @@ const ChatBoard = ({
     textareaRef.current.value = "";
     autoHeight(textareaRef.current, 100);
   };
-  //   //  ?? When you select the conversation then if have it messages count == 0 means no message then setelcome true to onboard user
-  //   useEffect(() => {
-  //     if (chatSlugConversation?._count?.message == 0) {
-  //       setIsWelcome(true);
-  //     }
-  //   }, [chatSlugConversation]);
   // ??  If Messages are there then update content state to populate the messages
   useEffect(() => {
     if (conversation?.messages?.length > 0 && isFetchSlugConversation) {
@@ -198,16 +196,7 @@ const ChatBoard = ({
         {isWelcome && <WelcomeMessage quickQuestions={quickQuestions} />}
         {/* && !messagesLoading */}
         {!isWelcome && !messagesLoading && content?.length > 0 && (
-          <div
-            style={{
-              width: "80%",
-              marginInline: "auto",
-              minHeight: "calc(100dvh - 122px)",
-              paddingTop: "3rem",
-              //   background: "red",
-            }}
-            className="chat-responses"
-          >
+          <div className="chat-responses">
             {content?.map((chat) => {
               const messageHtmlBody =
                 chat.content && marked(chat.content || "");

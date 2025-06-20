@@ -21,6 +21,7 @@ const useOutsideClick = (elemRef, handlerFunction) => {
       if (!elemRef?.current || elemRef.current.contains(e.target)) {
         return;
       }
+      console.log("Heee");
       handlerFunction(e);
     };
 

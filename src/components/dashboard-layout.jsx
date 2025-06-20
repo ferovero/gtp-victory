@@ -1,17 +1,50 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import { Edit } from "lucide-react";
 import { useRouter } from "next/router.js";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import useConversations from "../hooks/use-conversations.jsx";
+import css from "../styles/dashboard.module.css";
+import adminDashboard from "../styles/admin_dashboard.module.css";
 import AsidebarHeader from "./asidebar/asidebar-header.jsx";
 import Conversations from "./asidebar/conversations.jsx";
 import { useGlobalContext } from "./global-context.jsx";
-import { Edit, Hamburger } from "lucide-react";
-import css from "../styles/dashboard.module.css";
+import useUser from "../hooks/use-user.jsx";
 import CollapseIcon from "./collapse-icon.jsx";
-export const DashboardContext = createContext(null);
+import Link from "next/link.js";
+export const ChatDashboardContext = createContext(null);
+const adminLinks = [
+  { name: "Subscribers", href: "/dashboard/subscribers" },
+  { name: "Created Users", href: "/dashboard/my-users" },
+  { name: "Pending User", href: "/dashboard/pending-events" },
+];
+const LoaderLayout = () => {
+  return (
+    <div className={css.css_1ne4u3u_builder_block}>
+      <AsidebarSkl></AsidebarSkl>
+    </div>
+  );
+};
 const DashboardLayout = ({ children }) => {
-  const { setIsFetchSlugConversation } = useGlobalContext();
+  const { data: me } = useUser();
+  if (me?.user?.isAdmin) {
+    return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
+  }
+  if (me?.user && !me?.user?.isAdmin) {
+    return <ChatBotDashboardLayout>{children}</ChatBotDashboardLayout>;
+  }
+  return <LoaderLayout></LoaderLayout>;
+};
+const ChatBotDashboardLayout = ({ children }) => {
   const router = useRouter();
-  const slug = router.query?.slug;
+  const slug = router?.query?.slug;
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { setIsFetchSlugConversation } = useGlobalContext();
   const [isWelcome, setIsWelcome] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
@@ -21,7 +54,6 @@ const DashboardLayout = ({ children }) => {
   const loadingRef = useRef(null);
   const ITEM_HEIGHT = 35;
   const [conversations, setConversations] = useState([]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: conversationsData, isLoading: conversationsLoading } =
     useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
   const [chatSlugConversation, setChatSlugConversation] = useState(null); // ?? this state will be used by chat board to know which conversation id is in the url to load the message.
@@ -96,7 +128,6 @@ const DashboardLayout = ({ children }) => {
     conversationsLoading,
     isCollapsed,
   ]);
-
   //  ?? this use effect does things
   // ?? 1. chatSlugConversation state --> to load conversations of slug (conversation id) we have to update this state. we are doing this because
   useEffect(() => {
@@ -122,7 +153,10 @@ const DashboardLayout = ({ children }) => {
     if (conversationsData?.conversations?.length > 0 && !conversationsLoading) {
       setConversations((prev) => [...prev, ...conversationsData.conversations]);
     }
-    if (conversationsData?.totalPages == page) {
+    if (
+      conversationsData?.totalPages == page ||
+      conversationsData?.totalPages === 0
+    ) {
       setHasMore(false);
     }
   }, [conversationsData, page, conversationsLoading]);
@@ -132,7 +166,7 @@ const DashboardLayout = ({ children }) => {
     router.push("/dashboard/", undefined, { shallow: true });
   }, [router]);
   return (
-    <DashboardContext.Provider
+    <ChatDashboardContext.Provider
       value={{
         setChatSlugConversation,
         chatSlugConversation,
@@ -144,7 +178,11 @@ const DashboardLayout = ({ children }) => {
       }}
     >
       <div className={css.css_1ne4u3u_builder_block}>
-        {!isCollapsed && (
+        <Asidebar
+          setIsCollapsed={setIsCollapsed}
+          isCollapsed={isCollapsed}
+          style={{ paddingInline: "1rem" }}
+        >
           <ConversationAsideBar
             chatSlugConversation={chatSlugConversation}
             conversations={conversations}
@@ -155,16 +193,84 @@ const DashboardLayout = ({ children }) => {
             loadingRef={loadingRef}
             loading={conversationsLoading}
             hasMore={hasMore}
-            setIsCollapsed={setIsCollapsed}
-            isCollapsed={isCollapsed}
           />
-        )}
+        </Asidebar>
         {children}
       </div>
-    </DashboardContext.Provider>
+    </ChatDashboardContext.Provider>
   );
 };
-
+export const AdminDashboardLayout = ({ children }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const router = useRouter();
+  const pathname = router.pathname;
+  return (
+    <div className={css.css_1ne4u3u_builder_block}>
+      <Asidebar
+        setIsCollapsed={setIsCollapsed}
+        isCollapsed={isCollapsed}
+        style={{ paddingInline: "0px" }}
+      >
+        <div style={{ marginTop: "2rem" }}>
+          {adminLinks?.map((link) => (
+            <Link
+              key={link.href}
+              href={`/${link.href}`}
+              className={adminDashboard.css_9rto4r_builder_block}
+              style={{
+                background: pathname == link?.href ? "#343541" : "transparent",
+              }}
+            >
+              <span className={adminDashboard.link_btn_name}>{link.name}</span>
+            </Link>
+          ))}
+        </div>
+      </Asidebar>
+      {isCollapsed && (
+        <div style={{ margin: "1.5rem" }}>
+          <CollapseIcon onClick={() => setIsCollapsed(false)} />
+        </div>
+      )}
+      <div style={{ height: "100dvh", overflow: "auto", width: "100%" }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+const Asidebar = ({ children, setIsCollapsed, isCollapsed, ...props }) => {
+  return (
+    <aside
+      className={css.asidebar}
+      style={{ top: 0, display: isCollapsed ? "none" : "block" }}
+    >
+      <div
+        className={css.css_xhlzdw_builder_block}
+        builder-id="builder-c3a268b086794e93957cb7e7e93e2046"
+      >
+        {/* Header */}
+        <AsidebarHeader
+          setIsCollapsed={setIsCollapsed}
+          isCollapsed={isCollapsed}
+        />
+        <div style={{ ...(props.style ? props.style : {}) }}>{children}</div>
+      </div>
+    </aside>
+  );
+};
+const AsidebarSkl = () => {
+  return (
+    <aside className={css.asidebar} style={{ top: 0 }}>
+      <div
+        className={css.css_xhlzdw_builder_block}
+        builder-id="builder-c3a268b086794e93957cb7e7e93e2046"
+      >
+        {/* Header */}
+        <AsidebarHeader setIsCollapsed={() => {}} isCollapsed={true} />
+        <div></div>
+      </div>
+    </aside>
+  );
+};
 const ConversationAsideBar = ({
   chatSlugConversation,
   conversations,
@@ -175,52 +281,40 @@ const ConversationAsideBar = ({
   loadingRef,
   hasMore,
   loading,
-  isCollapsed,
-  setIsCollapsed,
 }) => {
   return (
-    <aside style={{ top: 0 }}>
-      <div
-        className={css.css_xhlzdw_builder_block}
-        builder-id="builder-c3a268b086794e93957cb7e7e93e2046"
-      >
-        {/* Header */}
-        <AsidebarHeader
-          setIsCollapsed={setIsCollapsed}
-          isCollapsed={isCollapsed}
-        />
-        {/* New Chat button */}
-        <button
-          className={css.add_new_chat_btn}
-          onClick={handleNewChatBtnClick}
-        >
-          <Edit className="action_icon" />
-          <span>New Chat</span>
-        </button>
-        {/* divider */}
-        <hr
-          style={{
-            borderColor: "rgba(255,255, 255, 0.07)",
-            marginTop: "1rem",
-            marginBottom: "1rem",
-          }}
-        />
-        {/* Conversations */}
-        <Conversations
-          chatSlugConversation={chatSlugConversation}
-          conversations={conversations}
-          hasMore={hasMore}
-          loading={loading}
-          loadingRef={loadingRef}
-          setIsFetchSlugConversation={setIsFetchSlugConversation}
-          sidebarRef={sidebarRef}
-          setConversations={setConversations}
-        />
-      </div>
-    </aside>
+    <>
+      {/* New Chat button */}
+      <button className={css.add_new_chat_btn} onClick={handleNewChatBtnClick}>
+        <Edit className="action_icon" />
+        <span>New Chat</span>
+      </button>
+      {/* divider */}
+      <hr
+        style={{
+          borderColor: "rgba(255,255, 255, 0.07)",
+          marginTop: "1rem",
+          marginBottom: "1rem",
+        }}
+      />
+      {/* Conversations */}
+      <Conversations
+        chatSlugConversation={chatSlugConversation}
+        conversations={conversations}
+        hasMore={hasMore}
+        loading={loading}
+        loadingRef={loadingRef}
+        setIsFetchSlugConversation={setIsFetchSlugConversation}
+        sidebarRef={sidebarRef}
+        setConversations={setConversations}
+      />
+    </>
   );
 };
-
+export const useChatDashboardContext = () => {
+  const context = useContext(ChatDashboardContext || null);
+  return context;
+};
 //  return (
 //     <>
 //       {/* <nav

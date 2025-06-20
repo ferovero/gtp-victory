@@ -10,13 +10,14 @@ builder.init(process.env.BUILDER_PUBLIC_API_KEY);
 export default function Home({ page }) {
     const [isOpen, setIsOpen] = useState(false);
     const [subscriptionType, setSubscriptionType] = useState('');
-    const { data: me } = useUser();
+    const { data: me, isLoading } = useUser();
     const router = useRouter();
     // console.log(me);
 
     // ?? select all the buttons and apply event to open modal
     useEffect(() => {
-        if (me?.user?.id) {
+        // console.log(isLoading, me?.user?.id);
+        if (!isLoading && !me?.user?.id) {
             const buttonIds = ["3-day-trial-btn-1", "3-day-trial-btn-2", "3-day-trial-btn-3", "basic-subscription", "pro-subscription"];
             const buttons = buttonIds.map(buttonId => (document.getElementById(buttonId)));
             const handleButtonClick = (e) => {
@@ -45,10 +46,10 @@ export default function Home({ page }) {
                 }
             }
         };
-    }, []);
+    }, [isLoading]);
 
     useEffect(() => {
-        if (me?.user?.id) {
+        if (!isLoading && me?.user?.id) {
             const trialBtn = document.getElementById('3-day-trial-btn-1');
             trialBtn.innerText = "Dashboard";
             if (trialBtn) {
@@ -57,7 +58,7 @@ export default function Home({ page }) {
                 };
             }
         }
-    }, [me]);
+    }, [me, isLoading]);
     return (
         <>
             <Head>

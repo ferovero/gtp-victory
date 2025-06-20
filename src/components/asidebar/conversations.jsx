@@ -113,7 +113,6 @@ const ConversationItem = ({
   }, [rename]);
   const [title, setTitle] = useState("");
   const [inputMounted, setIsInputMounted] = useState(false);
-
   const [dialog, setDialogOpen] = useState(false);
   const [dialogPos, setDialogPos] = useState({ x: 0, y: 0 });
   const [editLoading, setIsEditLoading] = useState(false);
@@ -125,7 +124,8 @@ const ConversationItem = ({
     },
     onMutate: () => setIsEditLoading(true),
     onSettled: () => setIsEditLoading(false),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      setTitle(res.title);
       setIsRenameAnyOne({ id: null, handlerFn: () => {} });
     },
   });
@@ -157,23 +157,12 @@ const ConversationItem = ({
   };
   // ??  Initiate the name state with conversation name in start
   useEffect(() => {
-    console.log("Hell");
     if (conversation.title) {
-      console.log("Hell");
       setTitle(conversation.title);
     }
-  }, [conversation.title]);
+  }, [conversation]);
   const handleOpeningDialog = (e) => {
     e.stopPropagation();
-    setIsAnyDialogOpen((prev) => {
-      if (prev?.id) {
-        if (prev.id == conversation.id) {
-          return { id: null };
-        }
-        return { id: conversation.id };
-      }
-      return { id: conversation.id };
-    });
     const parent = e.currentTarget.parentElement;
     const rect = parent.getBoundingClientRect();
     const windowInnerHeight = window.innerHeight;
@@ -189,38 +178,23 @@ const ConversationItem = ({
         y: rect.bottom - dialogHeight, // 20px below the parent
       });
     }
+    setIsAnyDialogOpen((prev) => {
+      console.log(prev);
+      if (prev?.id) {
+        if (prev.id == conversation.id) {
+          console.log("h");
+          return { id: null };
+        }
+        console.log("h");
+        return { id: conversation.id };
+      }
+      console.log("h");
+      return { id: conversation.id };
+    });
     console.log(window.screenY);
-    console.log();
-    // setDialogOpen((prev) => );
   };
-  const Dialog = () => {
-    const dialogRef = useRef(null);
-    useOutsideClick(dialogRef, () => setIsAnyDialogOpen({ id: null }), "click");
-    return (
-      <div
-        className={css.dialog}
-        style={{ "--x": `${dialogPos.x}px`, "--y": `${dialogPos.y}px` }}
-        ref={dialogRef}
-      >
-        <div
-          className={css.action_button_item}
-          onClick={(e) => startRenaming(e)}
-        >
-          <Pencil className="action_icon" /> <span>Rename</span>
-        </div>
-        <div
-          className={clsx(css.action_button_item, css.delete_btn)}
-          onClick={deleteConversationHandleFn}
-        >
-          <Trash className="action_icon" />
-          <span>Delete</span>
-        </div>
-      </div>
-    );
-  };
-  console.log(title);
-  //   console.log(rename);
   useEffect(() => {
+    console.log(isAnyDialogOpen);
     if (isAnyDialogOpen?.id) {
       if (isAnyDialogOpen?.id == conversation.id) {
         setDialogOpen(true);
@@ -248,7 +222,6 @@ const ConversationItem = ({
       className={css.css_9rto4r_builder_block}
       style={{
         background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
-        // position: "relative",
       }}
       disabled={editLoading}
       onClick={handleConversationClick}
@@ -278,21 +251,48 @@ const ConversationItem = ({
       {!rename && !editLoading && !deleteConversationPending && (
         <MoreHorizontal onClick={handleOpeningDialog} className="action_icon" />
       )}
-      {/* {
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+      {!rename && dialog && (
+        <Dialog
+          deleteConversationHandleFn={deleteConversationHandleFn}
+          dialogPos={dialogPos}
+          setIsAnyDialogOpen={setIsAnyDialogOpen}
+          isAnyDialogOpen={isAnyDialogOpen}
+          startRenaming={startRenaming}
         />
-      } */}
-      {!rename && dialog && <Dialog />}
+      )}
       {(editLoading || deleteConversationPending) && (
         <Loader className={css.spin_loader} />
       )}
     </button>
   );
 };
-
+const Dialog = ({
+  setIsAnyDialogOpen,
+  dialogPos,
+  deleteConversationHandleFn,
+  startRenaming,
+}) => {
+  const dialogRef = useRef(null);
+  useOutsideClick(dialogRef, () => setIsAnyDialogOpen({ id: null }), "click");
+  return (
+    <div
+      className={css.dialog}
+      style={{ "--x": `${dialogPos.x}px`, "--y": `${dialogPos.y}px` }}
+      ref={dialogRef}
+    >
+      <div className={css.action_button_item} onClick={(e) => startRenaming(e)}>
+        <Pencil className="action_icon" /> <span>Rename</span>
+      </div>
+      <div
+        className={clsx(css.action_button_item, css.delete_btn)}
+        onClick={deleteConversationHandleFn}
+      >
+        <Trash className="action_icon" />
+        <span>Delete</span>
+      </div>
+    </div>
+  );
+};
 const RenameInputComponent = ({
   setTitle,
   title,
@@ -306,6 +306,7 @@ const RenameInputComponent = ({
 }) => {
   // debugger;
   const inputRef = useRef(null);
+  const conversationItemRef = useRef(null);
   // ?? When Rename state is changing then i focus the conversation input
   useEffect(() => {
     if (inputRef?.current) {
@@ -317,14 +318,13 @@ const RenameInputComponent = ({
     //   debugger;
     const value = e.target.value;
     console.log(value);
+    console.log(value);
     setTitle(value);
   };
   const handleRenameValue = useCallback(
     (e, state) => {
-      console.log("Rnaming");
       e.stopPropagation();
       setIsRenameAnyOne((prev) => {
-        // console.log(prev);
         if (prev.id) {
           if (prev.id == conversation.id) {
             prev.handlerFn(title);
@@ -337,9 +337,9 @@ const RenameInputComponent = ({
     },
     [title, isRenameAnyOne]
   );
-  useOutsideClick(inputRef, (e) => handleRenameValue(e), "click");
+  useOutsideClick(conversationItemRef, (e) => handleRenameValue(e), "click");
   return (
-    <>
+    <div ref={conversationItemRef} style={{display: "flex", alignItems: "center"}}>
       <span
         className="builder-block builder-9a1c16654f844cf7b9724e6aa4c438c7 builder-has-component css-vky7x4"
         builder-id="builder-9a1c16654f844cf7b9724e6aa4c438c7"
@@ -358,13 +358,12 @@ const RenameInputComponent = ({
           handleRenameValue={handleRenameValue}
         />
       )}
-    </>
+    </div>
   );
 };
 const InputCheckButton = ({ handleRenameValue }) => {
-  console.log("YY");
   return (
-    <Check className="action_icon" onClick={(e) => handleRenameValue(e)} />
+    <Check className="action_icon" style={{marginLeft:"0.5rem"}} onClick={(e) => handleRenameValue(e)} />
   );
 };
 export default Conversations;

@@ -1,12 +1,17 @@
 import DashboardLayout, {
-  DashboardContext,
+  useChatDashboardContext,
 } from "../../components/dashboard-layout";
 import ChatBoard from "../../components/chat-board";
-import { useContext } from "react";
+import useUser from "../../hooks/use-user";
 
 function DashboardSlugPage() {
-  const context = useContext(DashboardContext);
-  return <ChatBoard {...context} />;
+  const { data: me } = useUser();
+  if (me?.user && !me?.user?.isAdmin) {
+    const chatDashboardContext = useChatDashboardContext();
+    return <ChatBoard {...chatDashboardContext} />;
+  } else {
+    return <></>;
+  }
 }
 
 DashboardSlugPage.getLayout = function (children) {
