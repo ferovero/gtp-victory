@@ -193,6 +193,7 @@ const ChatBotDashboardLayout = ({ children }) => {
             loadingRef={loadingRef}
             loading={conversationsLoading}
             hasMore={hasMore}
+            setIsCollapsed={setIsCollapsed}
           />
         </Asidebar>
         {children}
@@ -281,6 +282,7 @@ const ConversationAsideBar = ({
   loadingRef,
   hasMore,
   loading,
+  setIsCollapsed,
 }) => {
   return (
     <>
@@ -307,6 +309,7 @@ const ConversationAsideBar = ({
         setIsFetchSlugConversation={setIsFetchSlugConversation}
         sidebarRef={sidebarRef}
         setConversations={setConversations}
+        setIsCollapsed={setIsCollapsed}
       />
     </>
   );

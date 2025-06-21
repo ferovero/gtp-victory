@@ -26,6 +26,7 @@ const Conversations = ({
   hasMore,
   loading,
   loadingRef,
+  setIsCollapsed,
 }) => {
   const [isAnyDialogOpen, setIsAnyDialogOpen] = useState({ id: null });
   const [isRenameAnyOne, setIsRenameAnyOne] = useState({
@@ -62,6 +63,7 @@ const Conversations = ({
                 isAnyDialogOpen={isAnyDialogOpen}
                 setIsRenameAnyOne={setIsRenameAnyOne}
                 isRenameAnyOne={isRenameAnyOne}
+                setIsCollapsed={setIsCollapsed}
               />
             </CSSTransition>
           ))}
@@ -101,12 +103,16 @@ const ConversationItem = ({
   isAnyDialogOpen,
   setIsRenameAnyOne,
   isRenameAnyOne,
+  setIsCollapsed,
 }) => {
   const router = useRouter();
   const [rename, setRename] = useState(false);
   const handleConversationClick = useCallback(() => {
     if (!rename) {
       setIsFetchSlugConversation(true);
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      }
       router.push(`/dashboard/${conversation.id}`);
       return;
     }
@@ -339,7 +345,10 @@ const RenameInputComponent = ({
   );
   useOutsideClick(conversationItemRef, (e) => handleRenameValue(e), "click");
   return (
-    <div ref={conversationItemRef} style={{display: "flex", alignItems: "center"}}>
+    <div
+      ref={conversationItemRef}
+      style={{ display: "flex", alignItems: "center" }}
+    >
       <span
         className="builder-block builder-9a1c16654f844cf7b9724e6aa4c438c7 builder-has-component css-vky7x4"
         builder-id="builder-9a1c16654f844cf7b9724e6aa4c438c7"
@@ -363,7 +372,11 @@ const RenameInputComponent = ({
 };
 const InputCheckButton = ({ handleRenameValue }) => {
   return (
-    <Check className="action_icon" style={{marginLeft:"0.5rem"}} onClick={(e) => handleRenameValue(e)} />
+    <Check
+      className="action_icon"
+      style={{ marginLeft: "0.5rem" }}
+      onClick={(e) => handleRenameValue(e)}
+    />
   );
 };
 export default Conversations;
