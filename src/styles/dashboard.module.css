@@ -309,6 +309,9 @@
   top: 1rem;
   left: 50%;
   transform: translateX(-50%);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .conversations_loading {
   display: flex;
