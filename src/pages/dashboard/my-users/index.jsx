@@ -14,6 +14,7 @@ const MyUsers = () => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const fetchUsersAddedByAdmin = async () => {
+    setIsLoading(true);
     try {
       const users = await getUsersByAddedByAdmin();
       setUsers(users || []);
@@ -82,7 +83,12 @@ const MyUsers = () => {
             )}
           </div>
         )}
-        {isCreating && <CreatingUserForm setIsCreating={setIsCreating} />}
+        {isCreating && (
+          <CreatingUserForm
+            setIsCreating={setIsCreating}
+            fetchUsersAddedByAdmin={fetchUsersAddedByAdmin}
+          />
+        )}
         {!isCreating && users.length == 0 && !isLoading && (
           <div style={{ marginTop: "1rem" }}>No created users found.</div>
         )}
@@ -95,7 +101,7 @@ const userFormSchema = z.object({
   email: z.string().email("Invalid email address"),
   plan: z.enum(["basic", "pro"]).default("basic").optional(),
 });
-const CreatingUserForm = ({ setIsCreating }) => {
+const CreatingUserForm = ({ setIsCreating, fetchUsersAddedByAdmin }) => {
   const [formValues, setFormValues] = useState({ email: "", plan: "" });
   const [errors, setErrors] = useState({});
   const emailRef = useRef(null);
@@ -108,6 +114,7 @@ const CreatingUserForm = ({ setIsCreating }) => {
       setErrors((prev) => ({ ...prev, general: message }));
     },
     onSuccess: () => {
+      fetchUsersAddedByAdmin();
       setIsCreating(false);
     },
   });

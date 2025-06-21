@@ -333,4 +333,7 @@
     left: 0;
     z-index: 1000;
   }
+  .message_form_container {
+    width: 97% !important;
+  }
 }

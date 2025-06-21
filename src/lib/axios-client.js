@@ -1,9 +1,7 @@
 import axios from "axios";
-// console.log("AXIOS BASE URL :: ", process.env.NEXT_PUBLIC_SERVER_BASE_URL);
 const options = {
     baseURL: process.env.NEXT_PUBLIC_SERVER_BASE_URL,
     withCredentials: true,
-    // timeout: 10000,
 };
 const API = axios.create(options);
 export const APIRefresh = axios.create(options);
