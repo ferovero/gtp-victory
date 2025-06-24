@@ -18,7 +18,7 @@ const GlobalContextWrapper = ({ children }) => {
     // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
   } = useConversation(
     router.query?.slug,
-    !!router.query?.slug || isFetchSlugConversation
+    isFetchSlugConversation
   );
   return (
     <GlobalContext.Provider

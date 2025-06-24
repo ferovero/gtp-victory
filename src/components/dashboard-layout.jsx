@@ -17,7 +17,6 @@ import { useGlobalContext } from "./global-context.jsx";
 import useUser from "../hooks/use-user.jsx";
 import CollapseIcon from "./collapse-icon.jsx";
 import Link from "next/link.js";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
 export const ChatDashboardContext = createContext(null);
 const adminLinks = [
   { name: "Subscribers", href: "/dashboard/subscribers" },

@@ -159,11 +159,6 @@ const ChatBoard = ({
           sender: "USER",
           animate: true,
         },
-        {
-          content: userMessage,
-          sender: "BOT",
-          animate: true,
-        },
       ]); // ?? setting bot response
     }
     setIsWelcome(false);
