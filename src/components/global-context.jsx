@@ -2,12 +2,15 @@ import { createContext, useContext, useState } from "react";
 import useUser from "../hooks/use-user";
 import { useRouter } from "next/router";
 import useConversation from "../hooks/use-conversation";
+import useConversations from "../hooks/use-conversations";
 const GlobalContext = createContext(null);
 const GlobalContextWrapper = ({ children }) => {
   const meQuery = useUser();
   const [content, setContent] = useState([]); // user messages array
   const [isFetchSlugConversation, setIsFetchSlugConversation] = useState(false);
   const router = useRouter();
+  const [page, setPage] = useState(1);
+  const conversationsQuery = useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
   const {
     data: conversation,
     isLoading: messagesLoading,
@@ -17,8 +20,6 @@ const GlobalContextWrapper = ({ children }) => {
     router.query?.slug,
     !!router.query?.slug || isFetchSlugConversation
   );
-  console.log(conversation);
-  console.log(router.query?.slug);
   return (
     <GlobalContext.Provider
       value={{
@@ -30,6 +31,9 @@ const GlobalContextWrapper = ({ children }) => {
         conversation,
         messagesLoading,
         status,
+        conversationsQuery,
+        page,
+        setPage,
       }}
     >
       {children}

@@ -32,12 +32,14 @@ const LoaderLayout = () => {
   );
 };
 const DashboardLayout = ({ children }) => {
-  const [page, setPage] = useState(1);
   const {
-    meQuery: { data:me },
+    meQuery: { data: me },
+    conversationsQuery: {
+      data: conversationsData,
+      isLoading: conversationsLoading,
+    },
+    setPage,
   } = useGlobalContext();
-  const { data: conversationsData, isLoading: conversationsLoading } =
-    useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
   if (me?.user?.isAdmin) {
     return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
   }
