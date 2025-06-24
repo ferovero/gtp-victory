@@ -452,3 +452,20 @@ button {
   top: 1.6rem;
   z-index: 1000;
 }
+
+/* Asidebar Style Css */
+.asidebar_container {
+  transition: margin-left 300ms ease-in-out;
+}
+.asidebar_container-enter {
+  margin-left: -17rem;
+}
+.asidebar_container-enter-active {
+  margin-left: 0;
+}
+.asidebar_container-exit {
+  margin-left: 0;
+}
+.asidebar_container-exit {
+  margin-left: -17rem;
+}

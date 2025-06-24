@@ -1,61 +1,36 @@
-import { useMutation } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getAuthTokenMutationFn, createPasswordMutationFn } from "../services/user-api";
-import { z } from "zod";
-import useSearchQuery from "../hooks/use-search-query";
-const emailSchema = z.object({
-    email: z.string().email()
-});
-const createPasswordSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
+import { useMutation } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { z } from 'zod';
+import { loginMutationFn } from '../../../services/user-api';
+import useUser from '../../../hooks/use-user';
+import AuthUserCNAcess from '../../../components/auth-user-can-not-access';
+import { useRouter } from 'next/router';
+
+const loginSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string().min(8),
 }).refine(val => val.password === val.confirmPassword, { message: "Password And Confirm Password does not match.", path: ["confirmPassword"] });
-const SetPassword = () => {
-    const searchQuery = useSearchQuery();
-    const [formValues, setFormValues] = useState({ email: "", password: "", confirmPassword: "" });
+const Login = () => {
+    const query = useUser();
+    const router = useRouter();
+    const [formValues, setFormValues] = useState({ email: '', password: '' });
     const [errors, setErrors] = useState({});
-
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
     const confirmPasswordRef = useRef(null);
-
-    // Get AuthToken Mutation Fn
-    const { mutate: getAuthToken, isPending: authTokenLoading } = useMutation({
-        mutationFn: getAuthTokenMutationFn,
+    const { mutate: login, isPending } = useMutation({
+        mutationFn: loginMutationFn,
         onSuccess: (res) => {
-            console.log(res);
-            if (!res) {
-                setErrors(prev => ({ ...prev, general: "No Records found or invalid token" }));
-                return;
-            }
-            const { email } = emailSchema.parse(res);
-            setFormValues(prev => ({ ...prev, email }));
-        },
-        onError: (error) => {
-            console.log(error);
-            setErrors({ general: error.errorMessage || error.message || 'Something went wrong.' });
-        }
-    });
-    // Mutation for Update Password
-    const { mutate: createPassword, isPending: createPasswordLoading } = useMutation({
-        mutationFn: createPasswordMutationFn,
-        onSuccess: () => {
+            // console.log(res);
             setErrors({});
-            window.location.href = "/auth/login";
+            window.location.href = "/dashboard";
         },
         onError: (error) => {
-            setErrors(prev => ({ ...prev, general: error?.errorMessage || error?.message || "Something went wrong, please try again later." }))
+            setErrors(prev => ({ ...prev, general: error.errorMessage || error.message || "Something went wrong, please try again later." }));
+            console.og(error);
         }
     });
-
-    // Get User Email at first render
-    useEffect(() => {
-        if (searchQuery.token) {
-            getAuthToken(searchQuery.token);
-        }
-    }, [searchQuery.token]);
-
     // Dynamically update input styles on error/success
     useEffect(() => {
         const applyInputStyle = (ref, hasError, value) => {
@@ -68,11 +43,8 @@ const SetPassword = () => {
 
         applyInputStyle(emailRef, !!errors.email, formValues.email);
         applyInputStyle(passwordRef, !!errors.password, formValues.password);
-        applyInputStyle(confirmPasswordRef, !!errors.confirmPassword, formValues.confirmPassword);
     }, [errors, formValues]);
-
     const handleChange = useCallback((e) => {
-        // console.log(e.target.name, e.target.value);
         setFormValues(prev => ({ ...prev, [e.target.name]: e.target.value }));
         if (e.target.value == "" || !e.target.value) {
             setErrors({
@@ -89,9 +61,9 @@ const SetPassword = () => {
         setErrors(prev => ({ ...prev, [e.target.name]: '' })); // clear error on change
     }, []);
     const handleSubmit = useCallback(async (e) => {
+        e.preventDefault();
         setFormValues(prev => {
-            e.preventDefault();
-            const result = createPasswordSchema.safeParse(prev);
+            const result = loginSchema.safeParse(prev);
             if (!result.success) {
                 // format errors
                 const fieldErrors = {};
@@ -100,13 +72,21 @@ const SetPassword = () => {
                 }
                 setErrors(fieldErrors);
                 return prev;
-            };
-            createPassword({ token: searchQuery.token, password: result.data.password });
+            }
+            login({ ...prev });
             return prev;
+        })
+    }, []);
+    useEffect(() => {
+        if (
+            query.isFetching == false &&
+            query.isFetched &&
+            query.isSuccess &&
+            query.data?.user?.id
+        ) {
+            router.push("/dashboard");
         }
-        );
-    }, [searchQuery.token]);
-
+    }, [query, router]);
     return (
         <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf css-yuvktl">
             <div className="builder-block builder-f6cd5c3d9f1c4f9ba4054de2b74352ae css-1rs33wg" builder-id="builder-f6cd5c3d9f1c4f9ba4054de2b74352ae">
@@ -122,7 +102,7 @@ const SetPassword = () => {
                 <form aria-label="Registration form" className="builder-block builder-a626c486dc1d4ea6a91368dd49f47d2f css-86zdk2" builder-id="builder-a626c486dc1d4ea6a91368dd49f47d2f"
                     onSubmit={handleSubmit}
                 >
-                    <h1 className="builder-block builder-0606fd4cae884f32ae570dd6f8456a99 css-1nt83du" builder-id="builder-0606fd4cae884f32ae570dd6f8456a99"><span className="builder-block builder-52427264232349fc99af2a48e4c05d8d builder-has-component css-vky7x4" builder-id="builder-52427264232349fc99af2a48e4c05d8d"><span className="builder-text css-1qggkls">Create your password</span></span></h1>
+                    <h1 className="builder-block builder-0606fd4cae884f32ae570dd6f8456a99 css-1nt83du" builder-id="builder-0606fd4cae884f32ae570dd6f8456a99"><span className="builder-block builder-52427264232349fc99af2a48e4c05d8d builder-has-component css-vky7x4" builder-id="builder-52427264232349fc99af2a48e4c05d8d"><span className="builder-text css-1qggkls">Login to account</span></span></h1>
                     {/* Email */}
                     <div className="builder-block builder-6694ebca9d1946498d115cea8dd55061 css-rn8l1b" builder-id="builder-6694ebca9d1946498d115cea8dd55061">
                         <label htmlFor="email" className="builder-block builder-870d3f0037dc4043aac45b190279fc12 css-1tzgbp3" builder-id="builder-870d3f0037dc4043aac45b190279fc12">
@@ -130,7 +110,7 @@ const SetPassword = () => {
                                 <span className="builder-text css-1qggkls">Email</span>
                             </span>
                         </label>
-                        <input id="email" placeholder="Enter your email" aria-describedby="password-error" aria-invalid="false" required="" disabled className="builder-block builder-ca5e32caa1d84951bf3a7cb2063372cd builder-2c2b99b230504b7d8a239ff528137758 builder-2c2b99b230504b7d8a239ff528137758 css-14mpe92" builder-id="builder-ca5e32caa1d84951bf3a7cb2063372cd" name="email"
+                        <input id="email" placeholder="Enter your email" aria-describedby="password-error" aria-invalid="false" required="" className="builder-block builder-ca5e32caa1d84951bf3a7cb2063372cd builder-2c2b99b230504b7d8a239ff528137758 builder-2c2b99b230504b7d8a239ff528137758 css-14mpe92" builder-id="builder-ca5e32caa1d84951bf3a7cb2063372cd" name="email"
                             type="email"
                             value={formValues.email}
                             onChange={handleChange}
@@ -176,11 +156,11 @@ const SetPassword = () => {
                     {/* Submit Button */}
                     <button aria-busy="false" className="builder-block builder-4726b8ffcc9941278da342a2826c8f26 builder-eed6c2bfcc104c4080b2173c2538ad28 builder-eed6c2bfcc104c4080b2173c2538ad28 css-6a9sin" builder-id="builder-4726b8ffcc9941278da342a2826c8f26" style={{ "cursor": "pointer" }}
                         type="submit"
-                        disabled={authTokenLoading || createPasswordLoading}
+                        disabled={isPending}
                     >
                         <span className="builder-block builder-2a198bb06e2b4151b3a33942269014a6 css-vky7x4" builder-id="builder-2a198bb06e2b4151b3a33942269014a6">
                             <span className="builder-block builder-0a9849f423354daa9ad3eb55ac572c1b builder-has-component css-vky7x4" builder-id="builder-0a9849f423354daa9ad3eb55ac572c1b">
-                                <span className="builder-text css-1qggkls">{(authTokenLoading || createPasswordLoading) ? 'Loading...' : 'Set Password'}</span>
+                                <span className="builder-text css-1qggkls">{(isPending) ? 'Logging In...' : 'Login'}</span>
                             </span>
                         </span>
                     </button>
@@ -189,5 +169,4 @@ const SetPassword = () => {
         </div>
     )
 };
-
-export default SetPassword;
+export default AuthUserCNAcess(Login, "/auth/login");

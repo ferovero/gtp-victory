@@ -34,6 +34,8 @@ const ChatBoard = ({
   } = useGlobalContext();
   const router = useRouter();
   const conversationId = chatSlugConversation?.id;
+  console.log(isFetchSlugConversation);
+//   debugger;
   const {
     data: conversation,
     isLoading: messagesLoading,
@@ -75,7 +77,7 @@ const ChatBoard = ({
         const botMessage = res.botMessage;
         setConversations((prev) => [conversation, ...prev]); // ?? updating conversations state to reflect the current conversation into asidebar
         setContent((prev) => [...prev, botMessage]); // ?? setting bot response
-        setChatSlugConversation(conversation);
+        // setChatSlugConversation(conversation);
         setIsFetchSlugConversation(false);
         router.push(`/dashboard/${conversation.id}`, undefined, {
           shallow: true,
@@ -90,11 +92,11 @@ const ChatBoard = ({
     });
   const autoHeight = useCallback((element, x) => {
     if (element.scrollHeight <= x) {
-        element.style.height = "auto";
-        return;
-    };
+      element.style.height = "auto";
+      return;
+    }
     element.style.height = x + "px";
-    element.style.height = element.scrollHeight+2 + "px";
+    element.style.height = element.scrollHeight + 2 + "px";
   }, []);
   //  ?? Controlling the messages textbox input
   const handleMessageChange = useCallback((e) => {
@@ -144,13 +146,18 @@ const ChatBoard = ({
     }
     // ?? when there have no any slug then i we have to create conversation with a message
     if (!conversationId) {
-      createConversation({
-        message: userMessage,
-      });
+        createConversation({
+          message: userMessage,
+        });
       setContent([
         {
           content: userMessage,
           sender: "USER",
+          animate: true,
+        },
+        {
+          content: userMessage,
+          sender: "BOT",
           animate: true,
         },
       ]); // ?? setting bot response

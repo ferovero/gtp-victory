@@ -17,6 +17,7 @@ import { useGlobalContext } from "./global-context.jsx";
 import useUser from "../hooks/use-user.jsx";
 import CollapseIcon from "./collapse-icon.jsx";
 import Link from "next/link.js";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 export const ChatDashboardContext = createContext(null);
 const adminLinks = [
   { name: "Subscribers", href: "/dashboard/subscribers" },
@@ -32,30 +33,48 @@ const LoaderLayout = () => {
 };
 const DashboardLayout = ({ children }) => {
   const { data: me } = useUser();
+  const [page, setPage] = useState(1);
+  const { data: conversationsData, isLoading: conversationsLoading } =
+    useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
   if (me?.user?.isAdmin) {
     return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
   }
   if (me?.user && !me?.user?.isAdmin) {
-    return <ChatBotDashboardLayout>{children}</ChatBotDashboardLayout>;
+    return (
+      <ChatBotDashboardLayout
+        conversationsData={conversationsData}
+        conversationsLoading={conversationsLoading}
+        page={page}
+        setPage={setPage}
+      >
+        {children}
+      </ChatBotDashboardLayout>
+    );
   }
   return <LoaderLayout></LoaderLayout>;
 };
-const ChatBotDashboardLayout = ({ children }) => {
+const ChatBotDashboardLayout = ({
+  children,
+  setPage,
+  page,
+  conversationsLoading,
+  conversationsData,
+}) => {
   const router = useRouter();
   const slug = router?.query?.slug;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { setIsFetchSlugConversation } = useGlobalContext();
   const [isWelcome, setIsWelcome] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+  //   const [page, setPage] = useState(1);
   const [sidebarHeight, setSidebarHeight] = useState(0);
   const sidebarRef = useRef(null);
   const observerRef = useRef(null);
   const loadingRef = useRef(null);
   const ITEM_HEIGHT = 35;
   const [conversations, setConversations] = useState([]);
-  const { data: conversationsData, isLoading: conversationsLoading } =
-    useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
+  //   const { data: conversationsData, isLoading: conversationsLoading } =
+  //     useConversations(page);
   const [chatSlugConversation, setChatSlugConversation] = useState(null); // ?? this state will be used by chat board to know which conversation id is in the url to load the message.
   // ?? Measure sidebar height
   useEffect(() => {
@@ -207,6 +226,13 @@ export const AdminDashboardLayout = ({ children }) => {
   const pathname = router.pathname;
   return (
     <div className={css.css_1ne4u3u_builder_block}>
+      {/* <TransitionGroup component={null}>
+        <CSSTransition
+        in={isCollapsed}
+        classNames={'asidebar_container'}
+        appear={true}
+        >
+            <div key={"asidebar_container"}> */}
       <Asidebar
         setIsCollapsed={setIsCollapsed}
         isCollapsed={isCollapsed}
@@ -227,6 +253,9 @@ export const AdminDashboardLayout = ({ children }) => {
           ))}
         </div>
       </Asidebar>
+      {/* </div>
+        </CSSTransition>
+      </TransitionGroup> */}
       {isCollapsed && (
         <div style={{ margin: "1.5rem" }}>
           <CollapseIcon onClick={() => setIsCollapsed(false)} />

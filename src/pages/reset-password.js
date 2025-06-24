@@ -29,7 +29,7 @@ const ResetPassword = () => {
         onSuccess: () => {
             setErrors({});
             if (!me.user?.id) {
-                router.push("/login")
+                router.push("/auth/login")
             } else {
                 router.push("/dashboard");
             }

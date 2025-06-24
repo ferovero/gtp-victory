@@ -13,7 +13,7 @@ const Dashboard = () => {
   const router = useRouter();
   useEffect(() => {
     if (isFetching == false && isFetched && !isSuccess) {
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [isFetching, isFetched, isSuccess, router]);
   if (me?.user && me?.user?.isAdmin) {

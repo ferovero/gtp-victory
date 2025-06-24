@@ -7,7 +7,7 @@ const AuthUserCAcess = (Component) => {
     const router = useRouter();
     useEffect(() => {
       if (query.isFetching == false && query.isFetched && !query.isSuccess) {
-        router.push("/login");
+        router.push("/auth/login");
       }
     }, [query, router]);
     return <Component {...props} query={query} />;
