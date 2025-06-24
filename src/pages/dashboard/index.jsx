@@ -6,10 +6,12 @@ import DashboardLayout, {
 } from "../../components/dashboard-layout";
 import useUser from "../../hooks/use-user.jsx";
 import css from "../../styles/admin_dashboard.module.css";
-// import AuthUserCAcess from "../../components/auth-user-can-access.jsx";
+import { useGlobalContext } from "../../components/global-context.jsx";
 const Dashboard = () => {
-  const { isFetching, isFetched, isSuccess, data: me } = useUser();
-  //   const [isCollapsed, setIsCollapsed] = useState(false);
+  const {
+    meQuery: { isFetching, isFetched, isSuccess, data: me },
+  } = useGlobalContext();
+  //   const { isFetching, isFetched, isSuccess, data: me } = useUser();
   const router = useRouter();
   useEffect(() => {
     if (isFetching == false && isFetched && !isSuccess) {

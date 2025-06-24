@@ -31,16 +31,20 @@ const ChatBoard = ({
     setContent,
     isFetchSlugConversation,
     setIsFetchSlugConversation,
+    conversation,
+    messagesLoading,
+    status,
   } = useGlobalContext();
   const router = useRouter();
+  console.log(conversation);
   const conversationId = chatSlugConversation?.id;
-  console.log(isFetchSlugConversation);
-//   debugger;
-  const {
-    data: conversation,
-    isLoading: messagesLoading,
-    status, // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
-  } = useConversation(conversationId, isFetchSlugConversation);
+  //   const {
+  //     data: conversation,
+  //     isLoading: messagesLoading,
+  //     status,
+  //     // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
+  //   } = useConversation(conversationId, isFetchSlugConversation);
+
   const [error, setError] = useState(null);
   const [userMessage, setUserMessage] = useState("");
   const [sender, setSender] = useState("USER");
@@ -146,9 +150,9 @@ const ChatBoard = ({
     }
     // ?? when there have no any slug then i we have to create conversation with a message
     if (!conversationId) {
-        createConversation({
-          message: userMessage,
-        });
+      createConversation({
+        message: userMessage,
+      });
       setContent([
         {
           content: userMessage,
@@ -170,10 +174,13 @@ const ChatBoard = ({
   };
   // ??  If Messages are there then update content state to populate the messages
   useEffect(() => {
-    if (conversation?.messages?.length > 0 && isFetchSlugConversation) {
+    if (
+      conversation?.messages?.length > 0 &&
+      (router.query?.slug || isFetchSlugConversation)
+    ) {
       setContent(conversation.messages);
     }
-  }, [conversation, isFetchSlugConversation]);
+  }, [conversation, isFetchSlugConversation, router]);
   //  ?? user message ref to scroll down
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" }); // or 'auto'
