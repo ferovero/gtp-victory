@@ -38,6 +38,7 @@ const DashboardLayout = ({ children }) => {
       data: conversationsData,
       isLoading: conversationsLoading,
     },
+    page,
     setPage,
   } = useGlobalContext();
   if (me?.user?.isAdmin) {
