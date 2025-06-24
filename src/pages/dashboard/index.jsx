@@ -4,7 +4,6 @@ import ChatBoard from "../../components/chat-board.jsx";
 import DashboardLayout, {
   useChatDashboardContext,
 } from "../../components/dashboard-layout";
-import useUser from "../../hooks/use-user.jsx";
 import css from "../../styles/admin_dashboard.module.css";
 import { useGlobalContext } from "../../components/global-context.jsx";
 const Dashboard = () => {

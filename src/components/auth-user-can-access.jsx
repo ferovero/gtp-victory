@@ -1,9 +1,12 @@
 import { useEffect } from "react";
 import useUser from "../hooks/use-user";
 import { useRouter } from "next/router";
+import { useGlobalContext } from "./global-context";
 const AuthUserCAcess = (Component) => {
   const FetchComponent = (props) => {
-    const query = useUser();
+    const {
+      meQuery: query,
+    } = useGlobalContext();
     const router = useRouter();
     useEffect(() => {
       if (query.isFetching == false && query.isFetched && !query.isSuccess) {
