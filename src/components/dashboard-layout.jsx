@@ -1,4 +1,5 @@
 import { Edit } from "lucide-react";
+import Link from "next/link.js";
 import { useRouter } from "next/router.js";
 import {
   createContext,
@@ -8,15 +9,13 @@ import {
   useRef,
   useState,
 } from "react";
-import useConversations from "../hooks/use-conversations.jsx";
-import css from "../styles/dashboard.module.css";
 import adminDashboard from "../styles/admin_dashboard.module.css";
+import css from "../styles/dashboard.module.css";
 import AsidebarHeader from "./asidebar/asidebar-header.jsx";
 import Conversations from "./asidebar/conversations.jsx";
-import { useGlobalContext } from "./global-context.jsx";
-import useUser from "../hooks/use-user.jsx";
 import CollapseIcon from "./collapse-icon.jsx";
-import Link from "next/link.js";
+import { useGlobalContext } from "./global-context.jsx";
+import { queryClient } from "./query-provider.jsx";
 export const ChatDashboardContext = createContext(null);
 const adminLinks = [
   { name: "Subscribers", href: "/dashboard/subscribers" },
@@ -67,10 +66,10 @@ const ChatBotDashboardLayout = ({
   const router = useRouter();
   const slug = router?.query?.slug;
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { setIsFetchSlugConversation } = useGlobalContext();
+  const { setIsFetchSlugConversation, setChatBoardTitle, setContent } =
+    useGlobalContext();
   const [isWelcome, setIsWelcome] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  //   const [page, setPage] = useState(1);
   const [sidebarHeight, setSidebarHeight] = useState(0);
   const sidebarRef = useRef(null);
   const observerRef = useRef(null);
@@ -105,7 +104,12 @@ const ChatBotDashboardLayout = ({
           //   console.log("Hitting it");
           //   debugger;
           console.log("Hitting it");
-          setPage((prev) => prev + 1);
+          setPage((prev) => {
+            if (queryClient.getQueryData(["conversations", prev])) {
+              return prev + 1;
+            }
+            return prev;
+          });
         }
       },
       {
@@ -158,7 +162,6 @@ const ChatBotDashboardLayout = ({
       setChatSlugConversation({ id: slug, name: "" });
     }
   }, [slug]);
-
   //  ?? Behalf of SLUG updating the welcome state --> (this state track is we are on welcome page to create new conversation).
   useEffect(() => {
     if (!slug) {
@@ -167,7 +170,6 @@ const ChatBotDashboardLayout = ({
       setIsWelcome(false);
     }
   }, [slug]);
-
   // ?? here we are doing two main work:
   // ?? 1. if there have conversation and the query is not in loading phase then update the conversations array state by adding new conversations. so when page --> update --> conversations fetching query run and the conversationsData will be chnage and this useEffect will update the conversations state.
   // ?? 1.1 I can use the conversationsData state to populate all conversations to asidebar but when user creates then we have that conversation id and we want to append that new conversation item at first in asidebar but there have no state who can update so we are using state instead of conversationsData so we can add newer conversation items to it top that will show to asidebar.
@@ -182,12 +184,33 @@ const ChatBotDashboardLayout = ({
     ) {
       setHasMore(false);
     }
-  }, [conversationsData, page, conversationsLoading]);
+  }, [conversationsData, page, conversationsLoading, router]);
+  //  ?? this is important because when route will be change then conversations state will be trash and page will become 1 and the observer will be increment the page by 1 and this will become 2 and in above useEffect this will see the 2nd page conversations and put is to the conversations and we get lose our 1st page conversation item so to fix that when route will be chnage first set the page to 1 and then process will be follow again and in fecthing we have cached conversations data by page that will come instantely got it
+  useEffect(() => {
+    setPage(1);
+  }, [router]);
   // ??  When to click ne button then send them to /dashboard path
   const handleNewChatBtnClick = useCallback(() => {
     setChatSlugConversation(null);
+    setChatBoardTitle("");
+    if (window.innerWidth < 768) {
+      setIsCollapsed(true);
+    }
     router.push("/dashboard/", undefined, { shallow: true });
   }, [router]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleResize = () => {
+        if (window.innerWidth < 768) {
+          setIsCollapsed(true);
+        } else {
+          setIsCollapsed(false);
+        }
+      };
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
   return (
     <ChatDashboardContext.Provider
       value={{

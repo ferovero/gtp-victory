@@ -124,10 +124,45 @@
 
 
 
-    // console.log(conversationsData?.conversations);
-    // console.log(
-    //   "When Page",
-    //   page,
-    //   "then conversations is:",
-    //   conversationsData?.conversations
-    // );
+// console.log(conversationsData?.conversations);
+// console.log(
+//   "When Page",
+//   page,
+//   "then conversations is:",
+//   conversationsData?.conversations
+// );
+
+
+
+
+// chat-board 59
+// if (
+//     lastMessage?.sender == "USER" &&
+//     lastMessage.conversationId === conversationId
+// ) {
+//     // ?? here one more chance update user message so that we can sure about the user message has been added okay
+//     prev = [
+//         ...prev.map((messageItem, index) => {
+//             if (
+//                 index === prev.length - 1 &&
+//                 messageItem.conversationId == conversationId
+//             ) {
+//                 return {
+//                     id: Date.now(),
+//                     conversationId: conversationId,
+//                     content: userMessage,
+//                     sender: "USER",
+//                 };
+//             }
+//             return messageItem;
+//         }),
+//     ];
+// } else {
+//     // if by mistake there have no user message in the content box then add user Message
+//     console.log("Fired");
+//     if (res.conversationId === conversationId) {
+//         prev.push(res.userMessage);
+//     }
+// }
+// console.log(prev);
+// return [...prev, { ...res.botMessage, animate: true }];

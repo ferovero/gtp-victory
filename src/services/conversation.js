@@ -1,6 +1,7 @@
 import API from "../lib/axios-client"
 export const getConversationQueryFn = (page) => async () => {
     const response = await API.get("/conversation/all" + "?page=" + page);
+    console.log(response);
     return response;
 }
 export const createConversationMutationFn = async ({ message }) => await API.post("/conversation", { message });

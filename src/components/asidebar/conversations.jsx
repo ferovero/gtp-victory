@@ -1,22 +1,17 @@
 import { useMutation } from "@tanstack/react-query";
-import {
-  Check,
-  Loader,
-  MoreHorizontal,
-  MoreVertical,
-  Pencil,
-  Trash,
-} from "lucide-react";
+import clsx from "clsx";
+import { Check, Loader, MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { useRouter } from "next/router.js";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import useOutsideClick from "../../hooks/use-outside-click.jsx";
 import {
   deleteConversationMutationFn,
   editConversationNameMutationFn,
 } from "../../services/conversation.js";
 import css from "../../styles/dashboard.module.css";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
-import useOutsideClick from "../../hooks/use-outside-click.jsx";
-import clsx from "clsx";
+import { useGlobalContext } from "../global-context.jsx";
+import { queryClient } from "../query-provider.jsx";
 const Conversations = ({
   conversations,
   setConversations,
@@ -105,6 +100,7 @@ const ConversationItem = ({
   isRenameAnyOne,
   setIsCollapsed,
 }) => {
+  const { setChatBoardTitle } = useGlobalContext();
   const router = useRouter();
   const [rename, setRename] = useState(false);
   const handleConversationClick = useCallback(() => {
@@ -131,20 +127,75 @@ const ConversationItem = ({
     onMutate: () => setIsEditLoading(true),
     onSettled: () => setIsEditLoading(false),
     onSuccess: (res) => {
+      const conversationId = res.conversationId;
+      setConversations((prev) => {
+        // Updating the title among the conversations
+        const itemIndex = prev.findIndex((e) => e.id === conversationId);
+        const page = Math.ceil((itemIndex + 1) / 10);
+        const modifiedConversations = prev.map((convI) => {
+          if (convI.id == conversationId) {
+            return {
+              ...convI,
+              title: res.title,
+            };
+          }
+          return convI;
+        });
+        const existingConversation = queryClient.getQueryData([
+          "conversations",
+          page,
+        ]);
+        queryClient.setQueryData(["conversations", page], () => {
+          return {
+            ...existingConversation,
+            conversations: modifiedConversations,
+          };
+        });
+
+        // update the title to that slug conversation
+        queryClient.setQueryData(["chat", conversationId], () => {
+          const existingConversation = queryClient.getQueryData([
+            "chat",
+            conversationId,
+          ]);
+          return {
+            ...existingConversation,
+            title: res.title,
+          };
+        });
+
+        // now return modified state to the setter fun
+        return modifiedConversations;
+      });
+      setChatBoardTitle(res.title);
       setTitle(res.title);
       setIsRenameAnyOne({ id: null, handlerFn: () => {} });
     },
   });
-  const { mutate: deleteConversation, isPending: deleteConversationPending } =
+  const { mutate: deleteConversation, isLoading: deleteConversationPending } =
     useMutation({
       mutationFn: deleteConversationMutationFn,
       onSuccess: (res) => {
-        // console.log(res.conversationId);
-        setConversations((prev) => [
-          ...prev.filter(
-            (conversationItem) => conversationItem.id !== res.conversationId
-          ),
-        ]);
+        setConversations((prev) => {
+          const itemIndex = prev.findIndex((e) => e.id === res.conversationId);
+          const page = Math.ceil((itemIndex + 1) / 10);
+          const newConversations = [
+            ...prev.filter(
+              (conversationItem) => conversationItem.id !== res.conversationId
+            ),
+          ];
+          const existingConversation = queryClient.getQueryData([
+            "conversations",
+            page,
+          ]);
+          queryClient.setQueryData(["conversations", page], () => {
+            return {
+              ...existingConversation,
+              conversations: newConversations,
+            };
+          });
+          return newConversations;
+        });
       },
     });
   const startRenaming = (e) => {

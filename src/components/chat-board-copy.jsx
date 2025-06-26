@@ -39,6 +39,7 @@ const ChatBoard = ({
     setIsPendingChats,
   } = useGlobalContext();
   const router = useRouter();
+  const slugConversationId = router.query?.slug;
   const conversationId = chatSlugConversation?.id;
   const [error, setError] = useState(null);
   const [userMessage, setUserMessage] = useState("");
@@ -50,31 +51,84 @@ const ChatBoard = ({
     useMutation({
       mutationFn: appendMessageMutationFn,
       onSuccess: (res) => {
-        setContent((prev) => {
-          queryClient.setQueryData(["chat", res.conversationId], () => {
-            const existingConversation = queryClient.getQueryData([
-              "chat",
-              res.conversationId,
+        if (res.conversationId == conversationId) {
+          setContent((prev) => {
+            console.log([
+              ...prev,
+              {
+                id: Date.now(),
+                conversationId: conversationId,
+                content: userMessage,
+                sender: "USER",
+              },
             ]);
-            return {
-              ...existingConversation,
-              messages: [...(prev || []), { ...res.botMessage, animate: true }],
-            };
+            return [...prev, res.botMessage];
           });
-          return [...prev, { ...res.botMessage, animate: true }];
+        }
+        queryClient.setQueryData(["chat", res.conversationId], () => {
+          const existingConversation = queryClient.getQueryData([
+            "chat",
+            res.conversationId,
+          ]);
+          return {
+            ...existingConversation,
+            messages: [
+              ...(existingConversation.messages || []),
+              res.userMessage,
+              { ...res.botMessage, animate: true },
+            ],
+          };
         });
+        // queryClient.setQueryData(["chat", res.conversationId], () => {
+        //   const existingConversation = queryClient.getQueryData([
+        //     "chat",
+        //     res.conversationId,
+        //   ]);
+        //   return {
+        //     ...existingConversation,
+        //     messages: [
+        //       ...(existingConversation.messages || []),
+        //       { ...res.botMessage, animate: true },
+        //     ],
+        //   };
+        // });
+        setIsPendingChats((prev) => [
+          ...prev.filter(
+            (item) =>
+              item.conversationId && item.conversationId !== res.conversationId
+          ),
+        ]);
         setError(null);
       },
-      onError: (error) => {
+      onError: (error, _variable, context) => {
         // console.log(window.navigator.onLine);
         if (!window.navigator.onLine) {
           return setError({ message: "It seems you are offline." });
         }
+        console.log(_variable);
         const message =
           error?.message ||
           error?.errorMessage ||
           "Something went wrong, please try again later.";
         setError({ message: message });
+        console.log(conversationId);
+        setIsPendingChats((prev) => [
+          ...prev.map((item) => {
+            if (item.conversationId == conversationId) {
+              return {
+                ...item,
+                isLoader: false,
+                userMessage: {
+                  conversationId: conversationId,
+                  content: _variable.message,
+                  sender: "USER",
+                },
+                error: error.message || error.errorMessage,
+              };
+            }
+            return item;
+          }),
+        ]);
       },
     });
   // ?? create Conversation if there have no slug means chatSlugConversation is null means no slug is there and this is welcome case right so when user will fill message that will create conversation with mesasge and this will be handled on the server
@@ -86,14 +140,17 @@ const ChatBoard = ({
         const botMessage = res.botMessage;
         setConversations((prev) => {
           const newConversations = [conversation, ...prev];
-          const existingConversation = queryClient.getQueryData([
+          const existingConversationQuery = queryClient.getQueryData([
             "conversations",
             1,
           ]);
           queryClient.setQueryData(["conversations", 1], () => {
             return {
-              ...existingConversation,
-              conversations: newConversations,
+              ...existingConversationQuery,
+              conversations: [
+                newConversations,
+                ...existingConversationQuery.conversations,
+              ],
             };
           });
           return newConversations;
@@ -109,6 +166,9 @@ const ChatBoard = ({
         }); // ?? setting bot response
         setChatBoardTitle(conversation.title);
         setIsFetchSlugConversation(false);
+        setIsPendingChats((prev) => [
+          ...prev.filter((item) => !item.isWelcome),
+        ]);
         router.push(`/dashboard/${conversation.id}`, undefined, {
           shallow: true,
         });
@@ -118,6 +178,9 @@ const ChatBoard = ({
         const message =
           err?.errorMessage || err?.message || "Something went wrong.";
         setError({ message: message });
+        setIsPendingChats((prev) => [
+          ...prev.filter((item) => !item.isWelcome),
+        ]);
       },
     });
   const autoHeight = useCallback((element, x) => {
@@ -161,31 +224,31 @@ const ChatBoard = ({
         }
         return [
           ...prev,
-          {
-            conversationId: conversationId,
-            content: userMessage,
-            sender: "USER",
-          },
-        ];
+          //   {
+          //     conversationId: conversationId,
+          //     content: userMessage,
+          //     sender: "USER",
+          //   },
+        ]; // ?? here i am not adding the user message because we are adding into the pendingChats nd when pendingChat will found the router slug and active slug then this will be inject or add to the content stte got it
       });
       appendMessage({
         conversationId: conversationId,
         message: userMessage,
         sender: sender,
       });
-      //   setIsPendingChats((prev) => [
-      //     ...prev,
-      //     {
-      //       isWelcome: false,
-      //       conversationId: conversationId,
-      //       isLoader: true,
-      //       userMessage: {
-      //         conversationId: conversationId,
-      //         content: userMessage,
-      //         sender: "USER",
-      //       },
-      //     },
-      //   ]);
+      setIsPendingChats((prev) => [
+        ...prev,
+        {
+          isWelcome: false,
+          conversationId: conversationId,
+          isLoader: true,
+          userMessage: {
+            conversationId: conversationId,
+            content: userMessage,
+            sender: "USER",
+          },
+        },
+      ]);
     }
     // ?? when there have no any slug then i we have to create conversation with a message
     if (!conversationId) {
@@ -199,19 +262,19 @@ const ChatBoard = ({
           animate: true,
         },
       ]); // ?? setting bot response
-      //   setIsPendingChats((prev) => [
-      //     ...prev,
-      //     {
-      //       isWelcome: true,
-      //       conversationId: null,
-      //       isLoader: true,
-      //       userMessage: {
-      //         conversationId: null,
-      //         content: userMessage,
-      //         sender: "USER",
-      //       },
-      //     },
-      //   ]);
+      setIsPendingChats((prev) => [
+        ...prev,
+        {
+          isWelcome: true,
+          conversationId: null,
+          isLoader: true,
+          userMessage: {
+            conversationId: null,
+            content: userMessage,
+            sender: "USER",
+          },
+        },
+      ]);
     }
     setIsWelcome(false);
     setUserMessage("");
@@ -219,7 +282,6 @@ const ChatBoard = ({
     textareaRef.current.value = "";
     autoHeight(textareaRef.current, 100);
   };
-  console.log(creatingConversationPending);
   // ??  If Messages are there then update content state to populate the messages
   useEffect(() => {
     if (
@@ -231,28 +293,71 @@ const ChatBoard = ({
   }, [conversation, isFetchSlugConversation, router]);
   //  ?? user message ref to scroll down
   useEffect(() => {
+    if (isWelcome) return;
     endRef.current?.scrollIntoView({ behavior: "smooth" }); // or 'auto'
-  }, [content, conversationId]);
-  //  ?? this use effect will check is there
-  //   useEffect(() => {
-  //     if (pendingChats.length > 0) {
-  //       console.log(conversationId);
-  //       if (router.query?.slug) {
-  //         const pendingItem = pendingChats.filter(
-  //           (item) => item.conversationId === conversationId
-  //         )[0];
-  //         if (pendingItem) {
-  //           setContent((prev) => [...prev, pendingItem.userMessage]);
-  //         }
-  //       } else {
-  //         const pendingItem = pendingChats.filter((item) => item.isWelcome)[0];
-  //         // console.log(pendingItem);
-  //         if (pendingItem) {
-  //           setContent((prev) => [pendingItem.userMessage]);
-  //         }
-  //       }
-  //     }
-  //   }, [conversationId, router, pendingChats]);
+  }, [content, conversationId, isWelcome]);
+  //  ?? this use effect will check is there PENDING CHATS
+  useEffect(() => {
+    if (pendingChats.length > 0) {
+      if (slugConversationId && slugConversationId == conversationId) {
+        const pendingItem = pendingChats.filter(
+          (item) => item.conversationId === conversationId
+        )[0];
+        if (pendingItem) {
+          if (pendingItem.conversationId == conversationId) {
+            setContent((prev) => {
+              if (prev[prev.length - 1]?.sender == "USER") {
+                return [
+                  ...prev.map((item, index) => {
+                    if (index == prev.length - 1) {
+                      return pendingItem.userMessage;
+                    }
+                    return item;
+                  }),
+                ];
+              } else {
+                return [
+                  ...prev,
+                  {
+                    conversationId: conversationId,
+                    content: pendingItem.userMessage.content,
+                    sender: "USER",
+                  },
+                ];
+              }
+            });
+            if (pendingItem.error) {
+              setError({
+                message: pendingItem.error,
+                conversationId: pendingItem.conversationId,
+              });
+            }
+          }
+        }
+      } else {
+        if (!slugConversationId && !conversationId) {
+          console.log(pendingChats);
+          const pendingItem = pendingChats.filter((item) => item.isWelcome)[0];
+          if (pendingItem) {
+            setIsWelcome(false);
+            setContent((prev) => [
+              { id: Date.now(), ...pendingItem.userMessage },
+            ]);
+          }
+        }
+      }
+    }
+  }, [conversationId, router, pendingChats, slugConversationId]);
+  const isBackgroundChatProcessingLoading = !!pendingChats.filter(
+    (item) => item.conversationId == conversationId
+  )[0]?.isLoader;
+  const isWelcomeChatProcessingLoading =
+    !conversationId && !!pendingChats.filter((item) => item.isWelcome)[0];
+//   console.log(isWelcomeChatProcessingLoading);
+//   console.log(slugConversationId, conversationId);
+//   console.log(creatingConversationPending);
+//   console.log(content);
+console.log(error);
   return (
     <div style={{ width: "100%", height: "100dvh", overflow: "auto" }}>
       <Link href="/profile" className="profile_circle"></Link>
@@ -274,17 +379,16 @@ const ChatBoard = ({
             Unable to fetch the Conversation, Please try again later.
           </div>
         )}
-        {isWelcome &&
-          !appendingMessagePending &&
-          !creatingConversationPending && (
-            <WelcomeMessage quickQuestions={quickQuestions} />
-          )}
+        {isWelcome && !isWelcomeChatProcessingLoading && (
+          <WelcomeMessage quickQuestions={quickQuestions} />
+        )}
         {/* && !messagesLoading */}
         {!isWelcome && !messagesLoading && content?.length > 0 && (
           <div className="chat-responses">
             {content?.map((chat) => {
               const messageHtmlBody =
                 chat.content && marked(chat.content || "");
+              console.log("messageHtmlBody", messageHtmlBody);
               return (
                 <div key={chat.id}>
                   {chat.sender == "BOT" ? (
@@ -299,31 +403,32 @@ const ChatBoard = ({
                 </div>
               );
             })}
-            {console.log(
-              messagesLoading,
-              creatingConversationPending,
-              appendingMessagePending
-            )}
             {/* for the slug conversation this loading is for */}
-            {!isWelcome &&
-              (messagesLoading ||
-                creatingConversationPending ||
-                appendingMessagePending) && (
-                <div>
-                  <Loader className={css.spin_loader} />
-                </div>
-              )}
+            {!isWelcome && isBackgroundChatProcessingLoading && (
+              <div>
+                <Loader className={css.spin_loader} />
+              </div>
+            )}
             {(!creatingConversationPending || !appendingMessagePending) &&
-              error?.message && (
+              error?.message &&
+              error?.conversationId == conversationId && (
                 <div className={css.something_error}>
                   {error?.message
                     ? error?.message
                     : "Something went wrong, please try again later"}
                 </div>
               )}
+            {isWelcome && error?.message && (
+              <div className={css.something_error}>
+                {error?.message
+                  ? error?.message
+                  : "Something went wrong, please try again later"}
+              </div>
+            )}
             <div ref={endRef} />
           </div>
         )}
+
         {/* {!isWelcome && isWelcomeChatProcessingLoading && !conversationId && (
           <div>
             <Loader className={css.spin_loader} />
@@ -345,7 +450,11 @@ const ChatBoard = ({
         <MessageSubmit
           handleMessageChange={handleMessageChange} // ?? this handles the user input
           handleMessageSubmit={handleMessageSubmit} // ?? when to submit the message
-          isPending={appendingMessagePending || creatingConversationPending} // ?? Pending State when sending the message to server and waiting for response
+          isPending={
+            isBackgroundChatProcessingLoading ||
+            creatingConversationPending ||
+            isWelcomeChatProcessingLoading
+          } // ?? Pending State when sending the message to server and waiting for response
           message={userMessage} // ?? userMessage state to make the message textbox controlled component or sync with the userMessage state so for that this need this state
           textareaRef={textareaRef}
         />

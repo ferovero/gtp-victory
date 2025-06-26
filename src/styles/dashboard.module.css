@@ -268,6 +268,7 @@
   /* float: right; */
   display: flex;
   justify-content: flex-end;
+  margin-top: 2rem;
 }
 
 .chat_message.user {
@@ -303,7 +304,7 @@
   padding-block: 0.35rem;
   background-color: #202123;
   border-radius: 2rem;
-  margin-top: 0rem;
+  margin-top: 0.9rem;
   font-size: 0.815rem;
   position: absolute;
   top: 1rem;
