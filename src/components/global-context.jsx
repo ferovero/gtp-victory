@@ -18,6 +18,8 @@ const GlobalContextWrapper = ({ children }) => {
     status,
     // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
   } = useConversation(router.query?.slug, isFetchSlugConversation);
+  const [conversations, setConversations] = useState([]);
+
   const [pendingChats, setIsPendingChats] = useState([]);
   // {
   //   isWelcome: false,
@@ -48,6 +50,8 @@ const GlobalContextWrapper = ({ children }) => {
         setChatBoardTitle,
         pendingChats,
         setIsPendingChats,
+        conversations,
+        setConversations,
       }}
     >
       {children}

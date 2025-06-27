@@ -103,16 +103,6 @@ const ConversationItem = ({
   const { setChatBoardTitle } = useGlobalContext();
   const router = useRouter();
   const [rename, setRename] = useState(false);
-  const handleConversationClick = useCallback(() => {
-    if (!rename) {
-      setIsFetchSlugConversation(true);
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
-      }
-      router.push(`/dashboard/${conversation.id}`);
-      return;
-    }
-  }, [rename]);
   const [title, setTitle] = useState("");
   const [inputMounted, setIsInputMounted] = useState(false);
   const [dialog, setDialogOpen] = useState(false);
@@ -207,6 +197,22 @@ const ConversationItem = ({
         editConversationTitle({ title, conversationId: conversation.id }),
     });
   };
+  const handleConversationClick = useCallback(
+    (e) => {
+      console.log(e.target?.getAttribute("id"));
+      const targetId = e.target?.getAttribute("id");
+      if (targetId && targetId !== "dialog_box") return;
+      if (!rename) {
+        setIsFetchSlugConversation(true);
+        if (window.innerWidth < 768) {
+          setIsCollapsed(true);
+        }
+        router.push(`/dashboard/${conversation.id}`);
+        return;
+      }
+    },
+    [rename]
+  );
   const deleteConversationHandleFn = (e) => {
     e.stopPropagation();
     setIsAnyDialogOpen({ id: null });
@@ -336,6 +342,7 @@ const Dialog = ({
       className={css.dialog}
       style={{ "--x": `${dialogPos.x}px`, "--y": `${dialogPos.y}px` }}
       ref={dialogRef}
+      id="dialog_box"
     >
       <div className={css.action_button_item} onClick={(e) => startRenaming(e)}>
         <Pencil className="action_icon" /> <span>Rename</span>

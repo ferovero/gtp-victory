@@ -66,8 +66,12 @@ const ChatBotDashboardLayout = ({
   const router = useRouter();
   const slug = router?.query?.slug;
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { setIsFetchSlugConversation, setChatBoardTitle, setContent } =
-    useGlobalContext();
+  const {
+    setIsFetchSlugConversation,
+    setChatBoardTitle,
+    conversations,
+    setConversations,
+  } = useGlobalContext();
   const [isWelcome, setIsWelcome] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [sidebarHeight, setSidebarHeight] = useState(0);
@@ -75,7 +79,6 @@ const ChatBotDashboardLayout = ({
   const observerRef = useRef(null);
   const loadingRef = useRef(null);
   const ITEM_HEIGHT = 35;
-  const [conversations, setConversations] = useState([]);
   //   const { data: conversationsData, isLoading: conversationsLoading } =
   //     useConversations(page);
   const [chatSlugConversation, setChatSlugConversation] = useState(null); // ?? this state will be used by chat board to know which conversation id is in the url to load the message.
@@ -186,9 +189,17 @@ const ChatBotDashboardLayout = ({
     }
   }, [conversationsData, page, conversationsLoading, router]);
   //  ?? this is important because when route will be change then conversations state will be trash and page will become 1 and the observer will be increment the page by 1 and this will become 2 and in above useEffect this will see the 2nd page conversations and put is to the conversations and we get lose our 1st page conversation item so to fix that when route will be chnage first set the page to 1 and then process will be follow again and in fecthing we have cached conversations data by page that will come instantely got it
-  useEffect(() => {
-    setPage(1);
-  }, [router]);
+  //   useEffect(() => {
+  //     console.log(page);
+  //     for (let i = 1; i <= page; i++) {
+  //       setPage((prev) => {
+  //         const queryData = queryClient.getQueryData(["conversations", i]);
+  //         console.log(queryData);
+  //         setConversations((prev) => [...prev, queryData.conversations]);
+  //         return prev;
+  //       });
+  //     }
+  //   }, [router, page]);
   // ??  When to click ne button then send them to /dashboard path
   const handleNewChatBtnClick = useCallback(() => {
     setChatSlugConversation(null);
@@ -198,19 +209,19 @@ const ChatBotDashboardLayout = ({
     }
     router.push("/dashboard/", undefined, { shallow: true });
   }, [router]);
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const handleResize = () => {
-        if (window.innerWidth < 768) {
-          setIsCollapsed(true);
-        } else {
-          setIsCollapsed(false);
-        }
-      };
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }
-  }, []);
+  //   useEffect(() => {
+  //     if (typeof window !== "undefined") {
+  //       const handleResize = () => {
+  //         if (window.innerWidth < 768) {
+  //         //   setIsCollapsed(true);
+  //         } else {
+  //           setIsCollapsed(false);
+  //         }
+  //       };
+  //       window.addEventListener("resize", handleResize);
+  //       return () => window.removeEventListener("resize", handleResize);
+  //     }
+  //   }, []);
   return (
     <ChatDashboardContext.Provider
       value={{
