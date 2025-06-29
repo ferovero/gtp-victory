@@ -3,22 +3,24 @@ import { useEffect, useState } from 'react';
 import Modal from '../components/Modal';
 import EmailVerify from './email-verify';
 import { builder, BuilderComponent } from '@builder.io/react';
-import useUser from "../hooks/use-user";
 import { useRouter } from 'next/router';
+import { useGlobalContext } from '../components/global-context';
+import Cookies from 'js-cookie';
 builder.init(process.env.BUILDER_PUBLIC_API_KEY);
 
 export default function Home({ page }) {
     const [isOpen, setIsOpen] = useState(false);
     const [subscriptionType, setSubscriptionType] = useState('');
-    const { data: me, isLoading } = useUser();
+    const { meQuery: { data: me, isFetching: isLoading } } = useGlobalContext();
     const router = useRouter();
-    // console.log(me);
-
+    if (Cookies.get("gptvct_authnz")) {
+        router.push("/dashboard");
+    }
     // ?? select all the buttons and apply event to open modal
     useEffect(() => {
-        // console.log(isLoading, me?.user?.id);
-        if (!isLoading && !me?.user?.id) {
-            const buttonIds = ["3-day-trial-btn-1", "3-day-trial-btn-2", "3-day-trial-btn-3", "basic-subscription", "pro-subscription"];
+        const isAuthnz = Cookies.get("gptvct_authnz");
+        if ((!isLoading && !me?.user?.id) || !isAuthnz) {
+            const buttonIds = ["3-day-trial-btn-1", "3-day-trial-btn-2", "3-day-trial-btn-3", "basic-subscription", "pro-subscription", "login-button"];
             const buttons = buttonIds.map(buttonId => (document.getElementById(buttonId)));
             const handleButtonClick = (e) => {
                 const id = e.currentTarget.getAttribute("id");
@@ -30,6 +32,9 @@ export default function Home({ page }) {
                         setSubscriptionType("BASIC")
                     } else if (id == "pro-subscription") {
                         setSubscriptionType("PRO")
+                    } else if (id == "login-button") {
+                        router.push("auth/login");
+                        return;
                     }
                     setIsOpen(true);
                 }
@@ -45,20 +50,21 @@ export default function Home({ page }) {
                     });
                 }
             }
-        };
-    }, [isLoading]);
-
-    useEffect(() => {
-        if (!isLoading && me?.user?.id) {
-            const trialBtn = document.getElementById('3-day-trial-btn-1');
-            trialBtn.innerText = "Dashboard";
-            if (trialBtn) {
-                trialBtn.onclick = () => {
-                    router.push('/dashboard');
-                };
-            }
         }
-    }, [me, isLoading]);
+    }, [isLoading]);
+    // useEffect(() => {
+    //     const isAuthnz = Cookies.get("gptvct_authnz");
+    //     if ((!isLoading && me?.user?.id) || isAuthnz) {
+    //         // const trialBtn = document.getElementById('3-day-trial-btn-1');
+    //         // trialBtn.innerText = "Dashboard";
+    //         // if (trialBtn) {
+    //         //     trialBtn.onclick = () => {
+    //         //         router.push('/dashboard');
+    //         //     };
+    //         // }
+    //         router.replace("/dashboard");
+    //     }
+    // }, [me, isLoading]);
     return (
         <>
             <Head>

@@ -255,7 +255,7 @@ const ChatBoard = ({
   //   }, [conversationId, router, pendingChats]);
   return (
     <div style={{ width: "100%", height: "100dvh", overflow: "auto" }}>
-      <Link href="/profile" className="profile_circle"></Link>
+      <Link href="/auth/profile" className="profile_circle"></Link>
       {isCollapsed && (
         <CollapseIcon
           onClick={() => setIsCollapsed(false)}

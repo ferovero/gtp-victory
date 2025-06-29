@@ -32,17 +32,19 @@ const LoaderLayout = () => {
 const DashboardLayout = ({ children }) => {
   const {
     meQuery: { data: me },
-    conversationsQuery: {
-      data: conversationsData,
-      isLoading: conversationsLoading,
-    },
-    page,
-    setPage,
   } = useGlobalContext();
   if (me?.user?.isAdmin) {
     return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
   }
   if (me?.user && !me?.user?.isAdmin) {
+    const {
+      conversationsQuery: {
+        data: conversationsData,
+        isLoading: conversationsLoading,
+      },
+      page,
+      setPage,
+    } = useGlobalContext();
     return (
       <ChatBotDashboardLayout
         conversationsData={conversationsData}
@@ -126,7 +128,7 @@ const ChatBotDashboardLayout = ({
         observerRef.current.disconnect();
       }
     };
-  }, [conversationsLoading, hasMore, page, isCollapsed]);
+  }, [conversationsLoading, hasMore, isCollapsed]);
   // ?? Handle sidebar height changes to load more items if needed
   useEffect(() => {
     if (sidebarHeight > 0 && conversations.length > 0) {
@@ -183,6 +185,7 @@ const ChatBotDashboardLayout = ({
     }
     if (
       conversationsData?.totalPages == page ||
+      conversationsData?.totalPages <= page ||
       conversationsData?.totalPages === 0
     ) {
       setHasMore(false);
@@ -429,7 +432,7 @@ export const useChatDashboardContext = () => {
 //           >
 //             {isLoading && "Loading..."}
 //             {!isLoading && (
-//               <a className={css.nav_profile} href="/profile">
+//               <a className={css.nav_profile} href="/auth/profile">
 //                 {me?.user?.name}
 //               </a>
 //             )}

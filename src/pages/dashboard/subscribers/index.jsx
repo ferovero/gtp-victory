@@ -5,17 +5,44 @@ import "react-responsive-pagination/themes/classic-light-dark.css";
 import useUsers from "../../../hooks/use-users";
 import styles from "../../../styles/admin_dashboard.module.css";
 import { Loader } from "lucide-react";
+import { useGlobalContext } from "../../../components/global-context";
+import clsx from "clsx";
 
 const Subscribers = () => {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useUsers(page);
+  const { subscribersQuery, page, setPage } = useGlobalContext();
+  const data = subscribersQuery?.data;
+  const refetchSubscribers = subscribersQuery?.refetch;
+  const isLoading =
+    subscribersQuery?.isLoading || subscribersQuery?.isRefetching;
   const users = data?.users;
+  console.log(isLoading);
   return (
     <AdminDashboardLayout>
       <div style={{ padding: "2rem" }}>
-        <h1>Subscribers</h1>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <h1>Subscribers</h1>
+          <button
+            style={{
+              background: "transparent",
+              border: "1px solid white",
+              color: "white",
+              padding: "0.5rem 1rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+            onClick={refetchSubscribers}
+            disabled={isLoading}
+          >
+            {users && users?.length > 0 && isLoading && (
+              <Loader className="spin_loader" />
+            )}
+            Refresh
+          </button>
+        </div>
         <div className={styles.wrapper}>
-          <table className={styles.table}>
+          <table className={clsx(styles.table, styles.subscribers)}>
             <thead className={styles.thead}>
               <tr>
                 <th className={styles.th}>#</th>
@@ -29,7 +56,7 @@ const Subscribers = () => {
                 <th className={styles.th}>Canceled At</th>
               </tr>
             </thead>
-            {!isLoading && data && (
+            {users?.length > 0 && data && (
               <tbody>
                 {users?.map((user, idx) => {
                   const subscription = user?.subscription;
@@ -56,9 +83,13 @@ const Subscribers = () => {
                     </tr>
                   );
                 })}
+                {!users && isLoading && (
+                  <div style={{ width: "100%" }}>
+                    <Loader className="spin_loader" />
+                  </div>
+                )}
               </tbody>
             )}
-            {isLoading && <Loader className="spin_loader" />}
           </table>
         </div>
         <Paginate setPage={setPage} page={page} totalPages={data?.totalPages} />

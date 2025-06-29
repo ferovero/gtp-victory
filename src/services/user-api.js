@@ -47,7 +47,7 @@ export const getMeQueryFn = async () => {
     const response = await API.get(USER.me);
     return response;
 }
-export const getAllUsersQueryFn = page => async () => {
+export const getAllUsersQueryFn = (page) => async () => {
     const response = await API.get(`${USER.getAll}?page=${page}`);
     return response;
 }
@@ -61,3 +61,7 @@ export const createUserMutationFn = async (body) => {
     });
     return response;
 };
+export const deleteUserByAdminMutationFn = async (userId) => {
+    const response = await API.delete("/user/admin-added/" + userId);
+    return response;
+}

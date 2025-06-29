@@ -7,7 +7,7 @@ const USER = {
     createPassword: "/auth/create-password",
     updatePassword: "/auth/update-password",
     login: "/auth/login",
-    me: "/user/me",
+    me: "/auth/me",
     resetPassword: "auth/reset-password",
     resetTokenSender: "/auth/send-reset-password-code",
     getAll: "/user/all"

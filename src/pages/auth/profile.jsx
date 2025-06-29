@@ -1,4 +1,4 @@
-// app/profile/page.jsx
+// app/auth/profile/page.jsx
 import { useMutation } from "@tanstack/react-query";
 import { differenceInDays, fromUnixTime } from "date-fns";
 import { Loader } from "lucide-react";
@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 import {
   getBillingPortalMutationFn,
   logoutMutationFn,
-} from "../services/user-api";
-import styles from "../styles/profile.module.css";
-import AuthUserCAcess from "../components/auth-user-can-access";
+} from "../../services/user-api";
+import styles from "../../styles/profile.module.css";
+import AuthUserCAcess from "../../components/auth-user-can-access";
 import { useRouter } from "next/router";
 function ProfilePage({ query: { data: me, invalidate } }) {
   const [plan, setPlan] = useState({

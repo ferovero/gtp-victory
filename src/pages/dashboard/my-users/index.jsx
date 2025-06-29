@@ -1,33 +1,45 @@
 import { useMutation } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { Loader, Trash, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { z } from "zod";
+import { setErrorMap, z } from "zod";
 import { AdminDashboardLayout } from "../../../components/dashboard-layout";
 import {
   createUserMutationFn,
+  deleteUserByAdminMutationFn,
   getUsersByAddedByAdmin,
 } from "../../../services/user-api";
 import styles from "../../../styles/admin_dashboard.module.css";
+import { useGlobalContext } from "../../../components/global-context";
 
 const MyUsers = () => {
+  const { addedUserQuery } = useGlobalContext();
+  const data = addedUserQuery?.data;
+  const isLoading = addedUserQuery?.isFetching;
+  const refetchUsers = addedUserQuery?.invalidate;
   const [isCreating, setIsCreating] = useState(false);
   const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const fetchUsersAddedByAdmin = async () => {
-    setIsLoading(true);
-    try {
-      const users = await getUsersByAddedByAdmin();
-      setUsers(users || []);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching Users:", error);
-      setIsLoading(false);
-    }
-  };
-  // Fetch pending events from the API
+  const [error, setError] = useState({});
+  //   const [isLoading, setIsLoading] = useState(false);
+  //   const fetchUsersAddedByAdmin = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const users = await getUsersByAddedByAdmin();
+  //       setUsers(users || []);
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       console.error("Error fetching Users:", error);
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   // Fetch pending events from the API
+  //   useEffect(() => {
+  //     fetchUsersAddedByAdmin();
+  //   }, []);
   useEffect(() => {
-    fetchUsersAddedByAdmin();
-  }, []);
+    if (data) {
+      setUsers(data);
+    }
+  }, [data]);
   return (
     <AdminDashboardLayout>
       <div style={{ padding: "2rem", width: "100%" }}>
@@ -40,20 +52,38 @@ const MyUsers = () => {
           }}
         >
           {!isCreating ? <h1> Created Users</h1> : <span></span>}
-          <button
-            style={{
-              background: "transparent",
-              border: "1px solid white",
-              color: "white",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-            }}
-            onClick={() => setIsCreating((prev) => !prev)}
-            //   disabled={isLoading[customerId]}
-          >
-            {!isCreating ? "Create User" : <X />}
-          </button>
+          <div>
+            <button
+              style={{
+                background: "transparent",
+                border: "1px solid white",
+                color: "white",
+                padding: "0.5rem 1rem",
+                cursor: "pointer",
+                marginRight: "0.75rem",
+              }}
+              onClick={() => setIsCreating((prev) => !prev)}
+              //   disabled={isLoading[customerId]}
+            >
+              {!isCreating ? "Create User" : <X />}
+            </button>
+            {!isCreating && (
+              <button
+                style={{
+                  background: "transparent",
+                  border: "1px solid white",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  cursor: "pointer",
+                }}
+                onClick={refetchUsers}
+              >
+                Refresh
+              </button>
+            )}
+          </div>
         </div>
+        {error?.message && <div className="error-msg">{error.message}</div>}
         {!isCreating && (
           <div className={styles.wrapper}>
             {!isLoading && users?.length > 0 && (
@@ -63,17 +93,20 @@ const MyUsers = () => {
                     <th className={styles.th}>#</th>
                     <th className={styles.th}>Email</th>
                     <th className={styles.th}>Plan</th>
+                    <th className={styles.th}>Action</th>
                   </tr>
                 </thead>
                 {!isLoading && users?.length > 0 && (
                   <tbody>
                     {users?.map((user, idx) => {
                       return (
-                        <tr key={user.id} className={styles.tr}>
-                          <td className={styles.td}>{idx + 1}</td>
-                          <td className={styles.td}>{user.email}</td>
-                          <td className={styles.td}>{user.plan}</td>
-                        </tr>
+                        <User
+                          key={user.id}
+                          user={user}
+                          setUsers={setUsers}
+                          idx={idx}
+                          setError={setError}
+                        />
                       );
                     })}
                   </tbody>
@@ -86,11 +119,16 @@ const MyUsers = () => {
         {isCreating && (
           <CreatingUserForm
             setIsCreating={setIsCreating}
-            fetchUsersAddedByAdmin={fetchUsersAddedByAdmin}
+            fetchUsersAddedByAdmin={addedUserQuery.invalidate}
           />
         )}
         {!isCreating && users.length == 0 && !isLoading && (
           <div style={{ marginTop: "1rem" }}>No created users found.</div>
+        )}
+        {isLoading && (
+          <div>
+            <Loader className="spin_loader" />
+          </div>
         )}
         {/* <Paginate setPage={setPage} page={page} totalPages={data?.totalPages} /> */}
       </div>
@@ -102,11 +140,11 @@ const userFormSchema = z.object({
   plan: z.enum(["basic", "pro"]).default("basic").optional(),
 });
 const CreatingUserForm = ({ setIsCreating, fetchUsersAddedByAdmin }) => {
-  const [formValues, setFormValues] = useState({ email: "", plan: "" });
+  const [formValues, setFormValues] = useState({ email: "", plan: "basic" });
   const [errors, setErrors] = useState({});
   const emailRef = useRef(null);
   const planRef = useRef(null);
-  const { mutate: createUser, isPending } = useMutation({
+  const { mutate: createUser, isLoading: isPending } = useMutation({
     mutationFn: createUserMutationFn,
     onError: (error) => {
       const message =
@@ -252,6 +290,74 @@ const CreatingUserForm = ({ setIsCreating, fetchUsersAddedByAdmin }) => {
         </span>
       </button>
     </form>
+  );
+};
+const User = ({ user, idx, setUsers, setError }) => {
+  const { mutate: deleteUserMutation, isLoading: deletingUserLoading } =
+    useMutation({
+      mutationFn: deleteUserByAdminMutationFn,
+      onSuccess: (res) => {
+        console.log(res);
+        setUsers((prev) => [
+          ...prev.filter((item) => item.id == res.deletedUser.id),
+        ]);
+      },
+      onError: (error) => {
+        setError({
+          message:
+            error?.message || error?.errorMessage || "Something went wrong.",
+        });
+      },
+    });
+  const handleDelete = () => {
+    setError({});
+    deleteUserMutation(user.id);
+  };
+  return (
+    <>
+      <tr className={styles.tr}>
+        <td className={styles.td}>
+          {deletingUserLoading && (
+            <div
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "0",
+                transform: "translateX(-50%)",
+                background: "rgba(0,0,0,0.2)",
+                backdropFilter: "blur(1px)",
+                zIndex: 100,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Loader className="spin_loader" />
+            </div>
+          )}
+          {idx + 1}
+        </td>
+        <td className={styles.td}>{user.email}</td>
+        <td className={styles.td}>{user.plan}</td>
+        <td className={styles.td}>
+          <button
+            style={{
+              background: "transparent",
+              border: "1px solid white",
+              color: "white",
+              padding: "0.2rem 0.5rem",
+              cursor: "pointer",
+            }}
+            disabled={deletingUserLoading}
+            onClick={handleDelete}
+          >
+            <Trash style={{ width: "16px" }} />
+          </button>
+        </td>
+      </tr>
+    </>
   );
 };
 export default MyUsers;

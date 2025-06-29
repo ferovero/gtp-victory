@@ -1,14 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAllUsersQueryFn } from "../services/user-api";
+import { getUsersByAddedByAdmin } from "../services/user-api";
 import useInvalidateQuery from "./use-invalidate-query";
-const useUsers = (page) => {
-  const key = ["users", page];
+
+const useAddedUsers = () => {
+  const key = ["added_users"];
   const query = useQuery({
-    queryFn: getAllUsersQueryFn(page),
+    queryFn: getUsersByAddedByAdmin,
     queryKey: key,
     staleTime: Infinity,
-  }); 
+  });
   const { invalidate } = useInvalidateQuery(key);
   return { ...query, invalidate };
 };
-export default useUsers;
+
+export default useAddedUsers;

@@ -9,8 +9,9 @@ import { useRouter } from 'next/router';
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(8),
-}).refine(val => val.password === val.confirmPassword, { message: "Password And Confirm Password does not match.", path: ["confirmPassword"] });
+    // confirmPassword: z.string().min(8),
+})
+// .refine(val => val.password === val.confirmPassword, { message: "Password And Confirm Password does not match.", path: ["confirmPassword"] });
 const Login = () => {
     const query = useUser();
     const router = useRouter();
@@ -18,8 +19,8 @@ const Login = () => {
     const [errors, setErrors] = useState({});
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
-    const confirmPasswordRef = useRef(null);
-    const { mutate: login, isPending } = useMutation({
+    // const confirmPasswordRef = useRef(null);
+    const { mutate: login, isLoading } = useMutation({
         mutationFn: loginMutationFn,
         onSuccess: (res) => {
             // console.log(res);
@@ -136,7 +137,7 @@ const Login = () => {
                         {errors.password && <p className='error-msg'>{errors.password}</p>}
                     </div>
                     {/* Confirm Password */}
-                    <div className="builder-block builder-71ad7ae1631d46658b8a30b1adc9eb89 css-rn8l1b" builder-id="builder-71ad7ae1631d46658b8a30b1adc9eb89">
+                    {/* <div className="builder-block builder-71ad7ae1631d46658b8a30b1adc9eb89 css-rn8l1b" builder-id="builder-71ad7ae1631d46658b8a30b1adc9eb89">
                         <label htmlFor="confirmPassword" className="builder-block builder-5446fba486424e94afb1405e284e3572 css-1tzgbp3" builder-id="builder-5446fba486424e94afb1405e284e3572">
                             <span className="builder-block builder-5458e77326004eee988b5e146b0f3650 builder-has-component css-vky7x4" builder-id="builder-5458e77326004eee988b5e146b0f3650">
                                 <span className="builder-text css-1qggkls">
@@ -151,16 +152,16 @@ const Login = () => {
                             ref={confirmPasswordRef}
                         />
                         {errors.confirmPassword && <p className='error-msg'>{errors.confirmPassword}</p>}
-                    </div>
+                    </div> */}
 
                     {/* Submit Button */}
                     <button aria-busy="false" className="builder-block builder-4726b8ffcc9941278da342a2826c8f26 builder-eed6c2bfcc104c4080b2173c2538ad28 builder-eed6c2bfcc104c4080b2173c2538ad28 css-6a9sin" builder-id="builder-4726b8ffcc9941278da342a2826c8f26" style={{ "cursor": "pointer" }}
                         type="submit"
-                        disabled={isPending}
+                        disabled={isLoading}
                     >
                         <span className="builder-block builder-2a198bb06e2b4151b3a33942269014a6 css-vky7x4" builder-id="builder-2a198bb06e2b4151b3a33942269014a6">
                             <span className="builder-block builder-0a9849f423354daa9ad3eb55ac572c1b builder-has-component css-vky7x4" builder-id="builder-0a9849f423354daa9ad3eb55ac572c1b">
-                                <span className="builder-text css-1qggkls">{(isPending) ? 'Logging In...' : 'Login'}</span>
+                                <span className="builder-text css-1qggkls">{(isLoading) ? 'Logging In...' : 'Login'}</span>
                             </span>
                         </span>
                     </button>

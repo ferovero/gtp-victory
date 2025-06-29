@@ -9,13 +9,11 @@ const emailSchema = z.object({
 });
 
 const EmailVerify = ({ subscriptionType }) => {
-    const searchQuery = useSearchQuery();
     const plan = subscriptionType;
-    console.log(plan);
     const mode = (subscriptionType == "3DTRIAL") ? "TRIAL" : null;
     const [formValues, setFormValues] = useState({ email: '' });
     const [errors, setErrors] = useState({});
-    const { mutate, isPending } = useMutation({
+    const { mutate, isLoading: isPending } = useMutation({
         mutationFn: onEmailVerifyMutationFn,
         onSuccess: (res) => {
             window.location.href = res.redirectUrl;
@@ -60,7 +58,7 @@ const EmailVerify = ({ subscriptionType }) => {
 
     const handleSubmit = useCallback(async (e) => {
         setFormValues(prev => {
-           // console.log(process.env.NEXT_PUBLIC_SERVER_BASE_URL);
+            // console.log(process.env.NEXT_PUBLIC_SERVER_BASE_URL);
             e.preventDefault();
             const result = emailSchema.safeParse(prev);
             if (!result.success) {
