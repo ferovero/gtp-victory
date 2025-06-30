@@ -13,12 +13,14 @@ import AuthUserCAcess from "../../components/auth-user-can-access";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import { queryClient } from "../../components/query-provider";
+import { useGlobalContext } from "../../components/global-context";
 function ProfilePage({ query: { data: me } }) {
   const [plan, setPlan] = useState({
     status: "subscribed",
     daysLeft: 0,
     planName: "NULL",
   });
+  const { setConversations } = useGlobalContext();
   const [user, setUser] = useState(null);
   const router = useRouter();
   const { mutate: getBillingPortal, isLoading: isPending } = useMutation({
@@ -34,6 +36,7 @@ function ProfilePage({ query: { data: me } }) {
       Cookies.remove("gptvct_authnz");
       Cookies.remove("gptvct_admin");
       queryClient.invalidateQueries();
+      setConversations([]);
       if (router) {
         router.push("/");
       }
