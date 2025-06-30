@@ -219,7 +219,6 @@ const ChatBoard = ({
     textareaRef.current.value = "";
     autoHeight(textareaRef.current, 100);
   };
-  console.log(creatingConversationPending);
   // ??  If Messages are there then update content state to populate the messages
   useEffect(() => {
     if (
@@ -255,7 +254,7 @@ const ChatBoard = ({
   //   }, [conversationId, router, pendingChats]);
   return (
     <div style={{ width: "100%", height: "100dvh", overflow: "auto" }}>
-      <Link href="/auth/profile" className="profile_circle"></Link>
+      {/* <Link href="/auth/profile" className="profile_circle"></Link> */}
       {isCollapsed && (
         <CollapseIcon
           onClick={() => setIsCollapsed(false)}
@@ -299,11 +298,6 @@ const ChatBoard = ({
                 </div>
               );
             })}
-            {console.log(
-              messagesLoading,
-              creatingConversationPending,
-              appendingMessagePending
-            )}
             {/* for the slug conversation this loading is for */}
             {!isWelcome &&
               (messagesLoading ||

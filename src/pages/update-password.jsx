@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import useUser from "../hooks/use-user";
 import { updatePasswordMutationFn } from "../services/user-api";
+import { useRouter } from "next/router";
 const updatePasswordSchema = z
   .object({
     oldPassword: z.string().min(8),
     newPassword: z.string().min(8),
-    confirmPassword: z.string().min(8)
+    confirmPassword: z.string().min(8),
   })
   .refine((val) => val.newPassword === val.confirmPassword, {
     message: "New Password And Confirm Password does not match.",
@@ -23,13 +23,18 @@ const UpdatePassword = () => {
   const oldPasswordRef = useRef(null);
   const newPasswordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
+  const router = useRouter();
   // Mutation for Update Password
-  const { mutate: updatePassword, isPending: updatePasswordLoading } =
+  const { mutate: updatePassword, isLoading: updatePasswordLoading } =
     useMutation({
       mutationFn: updatePasswordMutationFn,
-      onSuccess: () => {
+      onSuccess: (res) => {
         setErrors({});
-        window.location.href = "/dashboard";
+        if (res.user?.isAdmin) {
+          router.push("/dashboard/subscribers");
+        } else {
+          router.push("/dashboard");
+        }
       },
       onError: (error) => {
         setErrors((prev) => ({
@@ -88,29 +93,29 @@ const UpdatePassword = () => {
   }, []);
   const handleSubmit = useCallback(
     async (e) => {
-      setFormValues((prev) => {
-        e.preventDefault();
-        const result = updatePasswordSchema.safeParse({
-          ...prev
-        });
-        if (!result.success) {
-          // format errors
-          const fieldErrors = {};
-          for (const issue of result.error.issues) {
-            fieldErrors[issue.path[0]] = issue.message;
-          }
-          setErrors(fieldErrors);
-          return prev;
-        }
-        updatePassword({
-          oldPassword: result.data.oldPassword,
-          newPassword: result.data.newPassword,
-          confirmPassword: result.data.confirmPassword,
-        });
-        return prev;
+      //   setFormValues((prev) => {
+      e.preventDefault();
+      setErrors({});
+      const result = updatePasswordSchema.safeParse({
+        ...formValues,
       });
+      if (!result.success) {
+        // format errors
+        const fieldErrors = {};
+        for (const issue of result.error.issues) {
+          fieldErrors[issue.path[0]] = issue.message;
+        }
+        setErrors(fieldErrors);
+        return;
+      }
+      updatePassword({
+        oldPassword: result.data.oldPassword,
+        newPassword: result.data.newPassword,
+        confirmPassword: result.data.confirmPassword,
+      });
+      //   });
     },
-    []
+    [formValues]
   );
   return (
     <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf css-yuvktl">

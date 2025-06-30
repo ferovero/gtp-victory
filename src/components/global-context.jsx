@@ -10,12 +10,39 @@ const GlobalContext = createContext(null);
 const GlobalContextWrapper = ({ children }) => {
   const meQuery = useUser();
   const [page, setPage] = useState(1);
+  const [content, setContent] = useState([]); // user messages array
+  const [isFetchSlugConversation, setIsFetchSlugConversation] = useState(true);
+  const [conversations, setConversations] = useState([]);
+  const [lastConversationItemMounted, setLastConversationItemMounted] =
+    useState(false);
+  const [pendingChats, setIsPendingChats] = useState([]);
+  const addedUserQuery = useAddedUsers();
+  const subscribersQuery = useUsers(page);
+  // {
+  //   isWelcome: false,
+  //   conversationId: null,
+  //   isLoader: false,
+  //   userMessage: "",
+  // }
+  const [chatBoardTitle, setChatBoardTitle] = useState("");
+  const router = useRouter();
+  const [a, setA] = useState(false);
+  const conversationsQuery = useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
+  const {
+    data: conversation,
+    isLoading: messagesLoading,
+    status,
+    // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
+  } = useConversation(router.query?.slug, isFetchSlugConversation);
+  useEffect(() => {
+    if (conversation?.title) {
+      setChatBoardTitle(conversation.title);
+    }
+  }, [conversation]);
   if (
     (Cookies.get("gptvct_authnz") && Cookies.get("gptvct_admin")) ||
     (!meQuery?.isLoading && meQuery?.data?.user?.isAdmin)
   ) {
-    const addedUserQuery = useAddedUsers();
-    const subscribersQuery = useUsers(page);
     return (
       <GlobalContext.Provider
         value={{
@@ -30,31 +57,6 @@ const GlobalContextWrapper = ({ children }) => {
       </GlobalContext.Provider>
     );
   }
-  const [content, setContent] = useState([]); // user messages array
-  const [isFetchSlugConversation, setIsFetchSlugConversation] = useState(true);
-  const router = useRouter();
-  const [chatBoardTitle, setChatBoardTitle] = useState("");
-  const conversationsQuery = useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
-  const {
-    data: conversation,
-    isLoading: messagesLoading,
-    status,
-    // this represents is status == "error" means unable to fetch the conversation and this should handled sperately
-  } = useConversation(router.query?.slug, isFetchSlugConversation);
-  const [conversations, setConversations] = useState([]);
-  const [pendingChats, setIsPendingChats] = useState([]);
-
-  // {
-  //   isWelcome: false,
-  //   conversationId: null,
-  //   isLoader: false,
-  //   userMessage: "",
-  // }
-  useEffect(() => {
-    if (conversation?.title) {
-      setChatBoardTitle(conversation.title);
-    }
-  }, [conversation]);
   return (
     <GlobalContext.Provider
       value={{
@@ -77,6 +79,8 @@ const GlobalContextWrapper = ({ children }) => {
         setConversations,
         getSubscribers: () => ({ data: null }),
         addedUserQuery: {},
+        lastConversationItemMounted,
+        setLastConversationItemMounted,
       }}
     >
       {children}

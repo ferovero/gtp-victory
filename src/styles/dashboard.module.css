@@ -65,6 +65,9 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+  height: calc(
+    100dvh - 150px - 35px
+  ); /*150px is for asidebar header and 30px is for bottom profile*/
 }
 /* Conversation Items */
 .css_9rto4r_builder_block {
@@ -319,7 +322,8 @@
   justify-content: center;
   align-items: center;
   margin-block: 0.3rem;
-  padding-block: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.915rem;
 }
 @keyframes spin {
   0% {

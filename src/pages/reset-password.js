@@ -24,14 +24,18 @@ const ResetPassword = () => {
     const passwordRef = useRef(null);
     const confirmPasswordRef = useRef(null);
     // ?? Mutation for Update Password
-    const { mutate: resetPassword, isPending: resetPasswordLoading } = useMutation({
+    const { mutate: resetPassword, isLoading: resetPasswordLoading } = useMutation({
         mutationFn: resetPasswordMutationFn,
         onSuccess: () => {
             setErrors({});
             if (!me.user?.id) {
                 router.push("/auth/login")
             } else {
-                router.push("/dashboard");
+                if (me?.user?.isAdmin) {
+                    router.push("/dashboard/subscribers");
+                } else {
+                    router.push("/dashboard");
+                }
             }
         },
         onError: (error) => {
@@ -71,21 +75,17 @@ const ResetPassword = () => {
     }, []);
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFormValues(prev => {
-            const result = resetPasswordSchema.safeParse({ ...prev, csrfToken: authCSRFToken, resetCode: searchQuery.code });
-            if (!result.success) {
-                // format errors
-                const fieldErrors = {};
-                for (const issue of result.error.issues) {
-                    fieldErrors[issue.path[0]] = issue.message;
-                }
-                setErrors(fieldErrors);
-                return prev;
-            };
-            resetPassword(result.data);
+        const result = resetPasswordSchema.safeParse({ ...formValues, csrfToken: authCSRFToken, resetCode: searchQuery.code });
+        if (!result.success) {
+            // format errors
+            const fieldErrors = {};
+            for (const issue of result.error.issues) {
+                fieldErrors[issue.path[0]] = issue.message;
+            }
+            setErrors(fieldErrors);
             return prev;
-        }
-        );
+        };
+        resetPassword(result.data);
     };
     return (
         <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf css-yuvktl">

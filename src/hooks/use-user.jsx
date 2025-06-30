@@ -11,15 +11,14 @@ const useUser = () => {
     staleTime: Infinity,
   });
   const { invalidate } = useInvalidateQuery(key);
-  console.log(query?.data);
   if (!query.isFetching && query.data?.user?.id) {
-    console.log(query?.data?.user?.isAdmin);
     cookies.set("gptvct_authnz", true);
     if (query?.data?.user?.isAdmin) {
       cookies.set("gptvct_admin", true);
+    } else {
+      cookies.remove("gptvct_admin");
     }
   } else if (!query.isFetching && !query.data?.user?.id) {
-    console.log(query.data?.user);
     cookies.remove("gptvct_authnz");
     cookies.remove("gptvct_admin");
   }

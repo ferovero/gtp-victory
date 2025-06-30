@@ -299,7 +299,7 @@ const User = ({ user, idx, setUsers, setError }) => {
       onSuccess: (res) => {
         console.log(res);
         setUsers((prev) => [
-          ...prev.filter((item) => item.id == res.deletedUser.id),
+          ...prev.filter((item) => item.id !== res.deletedUser.id),
         ]);
       },
       onError: (error) => {

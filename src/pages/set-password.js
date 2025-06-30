@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getAuthTokenMutationFn, createPasswordMutationFn } from "../services/user-api";
 import { z } from "zod";
 import useSearchQuery from "../hooks/use-search-query";
+import { useRouter } from "next/router";
 const emailSchema = z.object({
     email: z.string().email()
 });
@@ -15,13 +16,13 @@ const SetPassword = () => {
     const searchQuery = useSearchQuery();
     const [formValues, setFormValues] = useState({ email: "", password: "", confirmPassword: "" });
     const [errors, setErrors] = useState({});
-
+    const router = useRouter();
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
     const confirmPasswordRef = useRef(null);
 
     // Get AuthToken Mutation Fn
-    const { mutate: getAuthToken, isPending: authTokenLoading } = useMutation({
+    const { mutate: getAuthToken, isLoading: authTokenLoading } = useMutation({
         mutationFn: getAuthTokenMutationFn,
         onSuccess: (res) => {
             console.log(res);
@@ -38,11 +39,11 @@ const SetPassword = () => {
         }
     });
     // Mutation for Update Password
-    const { mutate: createPassword, isPending: createPasswordLoading } = useMutation({
+    const { mutate: createPassword, isLoading: createPasswordLoading } = useMutation({
         mutationFn: createPasswordMutationFn,
         onSuccess: () => {
             setErrors({});
-            window.location.href = "/auth/login";
+            router.push("/auth/login");
         },
         onError: (error) => {
             setErrors(prev => ({ ...prev, general: error?.errorMessage || error?.message || "Something went wrong, please try again later." }))
@@ -89,9 +90,8 @@ const SetPassword = () => {
         setErrors(prev => ({ ...prev, [e.target.name]: '' })); // clear error on change
     }, []);
     const handleSubmit = useCallback(async (e) => {
-        setFormValues(prev => {
             e.preventDefault();
-            const result = createPasswordSchema.safeParse(prev);
+            const result = createPasswordSchema.safeParse(formValues);
             if (!result.success) {
                 // format errors
                 const fieldErrors = {};
@@ -102,10 +102,7 @@ const SetPassword = () => {
                 return prev;
             };
             createPassword({ token: searchQuery.token, password: result.data.password });
-            return prev;
-        }
-        );
-    }, [searchQuery.token]);
+    }, [searchQuery.token, formValues]);
 
     return (
         <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf css-yuvktl">

@@ -44,7 +44,7 @@ export default function Home({ page }) {
             });
             // cleanups
             return () => {
-                if (buttons.length > 0) {
+                if (buttons?.length > 0) {
                     buttons.forEach(buttonElem => {
                         buttonElem.removeEventListener("click", handleButtonClick);
                     });

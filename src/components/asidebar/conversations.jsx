@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Check, Loader, MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { useRouter } from "next/router.js";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import useOutsideClick from "../../hooks/use-outside-click.jsx";
 import {
@@ -22,7 +22,9 @@ const Conversations = ({
   loading,
   loadingRef,
   setIsCollapsed,
+  setLastConversationItemMounted,
 }) => {
+  console.log(loading);
   const [isAnyDialogOpen, setIsAnyDialogOpen] = useState({ id: null });
   const [isRenameAnyOne, setIsRenameAnyOne] = useState({
     id: null,
@@ -39,52 +41,79 @@ const Conversations = ({
       >
         Chats
       </span>
+      {/* {//console.log("h")} */}
       <TransitionGroup>
         {conversations
           ?.filter((i) => i?._count?.messages > 0)
-          .map((conversation) => (
-            <CSSTransition
-              key={conversation.id}
-              timeout={500}
-              classNames="slide-left"
-              unmountOnExit
-            >
-              <ConversationItem
-                conversation={conversation}
-                setConversations={setConversations}
-                isActive={chatSlugConversation?.id === conversation.id}
-                setIsFetchSlugConversation={setIsFetchSlugConversation}
-                setIsAnyDialogOpen={setIsAnyDialogOpen}
-                isAnyDialogOpen={isAnyDialogOpen}
-                setIsRenameAnyOne={setIsRenameAnyOne}
-                isRenameAnyOne={isRenameAnyOne}
-                setIsCollapsed={setIsCollapsed}
-              />
-            </CSSTransition>
-          ))}
+          .map((conversation, idx) => {
+            //console.log(conArr.length);
+            // console.log(idx, conArr.length - 1);
+            return (
+              <CSSTransition
+                key={conversation.id}
+                timeout={500}
+                classNames="slide-left"
+                unmountOnExit
+              >
+                <ConversationItem
+                  conversation={conversation}
+                  setConversations={setConversations}
+                  isActive={chatSlugConversation?.id === conversation.id}
+                  setIsFetchSlugConversation={setIsFetchSlugConversation}
+                  setIsAnyDialogOpen={setIsAnyDialogOpen}
+                  isAnyDialogOpen={isAnyDialogOpen}
+                  setIsRenameAnyOne={setIsRenameAnyOne}
+                  isRenameAnyOne={isRenameAnyOne}
+                  setIsCollapsed={setIsCollapsed}
+                  setLastConversationItemMounted={
+                    setLastConversationItemMounted
+                  }
+                  idx={idx}
+                  conArr={conversations}
+                />
+              </CSSTransition>
+            );
+          })}
       </TransitionGroup>
       {/* Intersection observer target */}
-      <div ref={loadingRef} className={css.conversations_loading}>
-        {hasMore && (
-          <>
-            <Loader className="spin_loader" />
-            {" Loading..."}
-          </>
+      {/* {!conversationsLoading && ( */}
+      <div
+        ref={loadingRef}
+        style={{
+          height: "30px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {hasMore && loading && (
+          <div className={css.conversations_loading}>
+            <Loader
+              className="spin_loader"
+              style={{ width: "20px", marginRight: "0.4rem" }}
+            />
+            <span
+              style={{ fontSize: "0.8rem", color: "rgba(299,299,299,0.7)" }}
+            >
+              Loading More...
+            </span>
+          </div>
+        )}
+        {!hasMore && !loading && (
+          <div
+            style={{
+              fontSize: "12px",
+              textAlign: "center",
+              color: "rgba(255,255,255,0.6)",
+              userSelect: "none",
+              marginBlock: "0.5rem",
+            }}
+          >
+            You covered all
+          </div>
         )}
       </div>
-      {!hasMore && !loading && (
-        <div
-          style={{
-            fontSize: "12px",
-            textAlign: "center",
-            color: "rgba(255,255,255,0.6)",
-            userSelect: "none",
-            marginTop: "0.5rem",
-          }}
-        >
-          You covered all
-        </div>
-      )}
+      {/* )} */}
     </div>
   );
 };
@@ -99,6 +128,9 @@ const ConversationItem = ({
   setIsRenameAnyOne,
   isRenameAnyOne,
   setIsCollapsed,
+  idx,
+  conArr,
+  setLastConversationItemMounted,
 }) => {
   const { setChatBoardTitle } = useGlobalContext();
   const router = useRouter();
@@ -199,7 +231,7 @@ const ConversationItem = ({
   };
   const handleConversationClick = useCallback(
     (e) => {
-      console.log(e.target?.getAttribute("id"));
+      //console.log(e.target?.getAttribute("id"));
       const targetId = e.target?.getAttribute("id");
       if (targetId && targetId !== "dialog_box") return;
       if (!rename) {
@@ -242,22 +274,22 @@ const ConversationItem = ({
       });
     }
     setIsAnyDialogOpen((prev) => {
-      console.log(prev);
+      //   //console.log(prev);
       if (prev?.id) {
         if (prev.id == conversation.id) {
-          console.log("h");
+          //   //console.log("h");
           return { id: null };
         }
-        console.log("h");
+        // //console.log("h");
         return { id: conversation.id };
       }
-      console.log("h");
+      //   //console.log("h");
       return { id: conversation.id };
     });
-    console.log(window.screenY);
+    // //console.log(window.screenY);
   };
   useEffect(() => {
-    console.log(isAnyDialogOpen);
+    // //console.log(isAnyDialogOpen);
     if (isAnyDialogOpen?.id) {
       if (isAnyDialogOpen?.id == conversation.id) {
         setDialogOpen(true);
@@ -271,7 +303,7 @@ const ConversationItem = ({
   useEffect(() => {
     if (isRenameAnyOne?.id) {
       if (isRenameAnyOne?.id == conversation.id) {
-        console.log("isRename");
+        // //console.log("isRename");
         setRename(true);
       } else {
         setRename(false);
@@ -280,6 +312,13 @@ const ConversationItem = ({
       setRename(false);
     }
   }, [isRenameAnyOne]);
+  //   Setting the last item to mounted so that next intersection can move to next page if the loadingRef is in viewport
+  //   debugger;
+  useEffect(() => {
+    if (idx == conArr?.filter((i) => i?._count?.messages > 0).length - 1) {
+      setLastConversationItemMounted(true);
+    }
+  }, [idx, conArr]);
   return (
     <button
       className={css.css_9rto4r_builder_block}
@@ -381,8 +420,8 @@ const RenameInputComponent = ({
   const handleNameChange = (e) => {
     //   debugger;
     const value = e.target.value;
-    console.log(value);
-    console.log(value);
+    //console.log(value);
+    //console.log(value);
     setTitle(value);
   };
   const handleRenameValue = useCallback(

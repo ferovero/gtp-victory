@@ -1,4 +1,4 @@
-import { Edit } from "lucide-react";
+import { Edit, Loader } from "lucide-react";
 import Link from "next/link.js";
 import { useRouter } from "next/router.js";
 import {
@@ -9,13 +9,17 @@ import {
   useRef,
   useState,
 } from "react";
-import adminDashboard from "../styles/admin_dashboard.module.css";
+import adm_css from "../styles/admin_dashboard.module.css";
 import css from "../styles/dashboard.module.css";
 import AsidebarHeader from "./asidebar/asidebar-header.jsx";
 import Conversations from "./asidebar/conversations.jsx";
 import CollapseIcon from "./collapse-icon.jsx";
 import { useGlobalContext } from "./global-context.jsx";
 import { queryClient } from "./query-provider.jsx";
+import Cookies from "js-cookie";
+import { useMutation } from "@tanstack/react-query";
+import { searchUserMutationFn } from "../services/user-api.js";
+import clsx from "clsx";
 export const ChatDashboardContext = createContext(null);
 const adminLinks = [
   { name: "Subscribers", href: "/dashboard/subscribers" },
@@ -33,10 +37,12 @@ const DashboardLayout = ({ children }) => {
   const {
     meQuery: { data: me },
   } = useGlobalContext();
-  if (me?.user?.isAdmin) {
+  const isAdmin = Cookies.get("gptvct_admin");
+  const isAuthnz = Cookies.get("gptvct_authnz");
+  if ((isAdmin && isAuthnz) || me?.user?.isAdmin) {
     return <AdminDashboardLayout>{children}</AdminDashboardLayout>;
   }
-  if (me?.user && !me?.user?.isAdmin) {
+  if ((!isAdmin && isAuthnz) || (me?.user && !me?.user?.isAdmin)) {
     const {
       conversationsQuery: {
         data: conversationsData,
@@ -73,7 +79,11 @@ const ChatBotDashboardLayout = ({
     setChatBoardTitle,
     conversations,
     setConversations,
+    meQuery,
+    lastConversationItemMounted,
+    setLastConversationItemMounted,
   } = useGlobalContext();
+  console.log(meQuery?.data?.user?.email);
   const [isWelcome, setIsWelcome] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [sidebarHeight, setSidebarHeight] = useState(0);
@@ -81,8 +91,6 @@ const ChatBotDashboardLayout = ({
   const observerRef = useRef(null);
   const loadingRef = useRef(null);
   const ITEM_HEIGHT = 35;
-  //   const { data: conversationsData, isLoading: conversationsLoading } =
-  //     useConversations(page);
   const [chatSlugConversation, setChatSlugConversation] = useState(null); // ?? this state will be used by chat board to know which conversation id is in the url to load the message.
   // ?? Measure sidebar height
   useEffect(() => {
@@ -96,30 +104,29 @@ const ChatBotDashboardLayout = ({
     window.addEventListener("resize", measureHeight);
     return () => window.removeEventListener("resize", measureHeight);
   }, []);
+  //   console.log(lastConversationItemMounted);
   //  ?? Intersection Observer for infinite scroll
   useEffect(() => {
-    // console.log(conversationsLoading);
     if (!loadingRef.current || !hasMore) return;
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        // debugger;
         const target = entries[0];
-        console.log("Hitting it", target.isIntersecting);
-        if (target.isIntersecting && !conversationsLoading && hasMore) {
-          //   console.log("Hitting it");
-          //   debugger;
-          console.log("Hitting it");
-          setPage((prev) => {
-            if (queryClient.getQueryData(["conversations", prev])) {
-              return prev + 1;
-            }
-            return prev;
-          });
+        console.log(target.isIntersecting, lastConversationItemMounted);
+        if (
+          target.isIntersecting &&
+          !conversationsLoading &&
+          hasMore &&
+          lastConversationItemMounted
+        ) {
+          if (queryClient.getQueryData(["conversations", page])?.success) {
+            setPage((prev) => prev + 1);
+            setLastConversationItemMounted(false);
+          }
         }
       },
       {
-        threshold: 1,
-        rootMargin: "20px",
+        threshold: 0.7,
+        // rootMargin: "20px",
       }
     );
     observerRef.current.observe(loadingRef.current);
@@ -128,59 +135,54 @@ const ChatBotDashboardLayout = ({
         observerRef.current.disconnect();
       }
     };
-  }, [conversationsLoading, hasMore, isCollapsed]);
-  // ?? Handle sidebar height changes to load more items if needed
-  useEffect(() => {
-    if (sidebarHeight > 0 && conversations.length > 0) {
-      console.log(conversations.length);
-      const currentItemsHeight = conversations.length * ITEM_HEIGHT;
-      const availableHeight = sidebarHeight;
-      //   debugger;
-      console.log(availableHeight, currentItemsHeight);
-      if (
-        currentItemsHeight < availableHeight &&
-        hasMore &&
-        !conversationsLoading
-      ) {
-        // const additionalItemsNeeded =
-        //   Math.ceil((availableHeight - currentItemsHeight) / ITEM_HEIGHT) +
-        //   BUFFER_SIZE;
-        // console.log(additionalItemsNeeded);
-        // if (additionalItemsNeeded > 0) {
-        // debugger;
-        console.log("Setting Page :: Sidebar Height When Need More");
-        // setPage((prev) => prev + 1);
-        // }
-      }
-    }
-  }, [
-    sidebarHeight,
-    conversations,
-    hasMore,
-    conversationsLoading,
-    isCollapsed,
-  ]);
+  }, [conversationsLoading, hasMore, page, lastConversationItemMounted]);
+  // !! UNUSED ?? Handle sidebar height changes to load more items if needed
+  //   useEffect(() => {
+  //     if (sidebarHeight > 0 && conversations.length > 0) {
+  //       const currentItemsHeight = conversations.length * ITEM_HEIGHT;
+  //       const availableHeight = sidebarHeight;
+  //       if (
+  //         currentItemsHeight < availableHeight &&
+  //         hasMore &&
+  //         !conversationsLoading
+  //       ) {
+  //         // const additionalItemsNeeded =
+  //         //   Math.ceil((availableHeight - currentItemsHeight) / ITEM_HEIGHT) +
+  //         //   BUFFER_SIZE;
+  //         // console.log(additionalItemsNeeded);
+  //         // if (additionalItemsNeeded > 0) {
+  //         // debugger;
+  //         console.log("Setting Page :: Sidebar Height When Need More");
+  //         // setPage((prev) => prev + 1);
+  //         // }
+  //       }
+  //     }
+  //   }, [
+  //     sidebarHeight,
+  //     conversations,
+  //     hasMore,
+  //     conversationsLoading,
+  //     isCollapsed,
+  //   ]);
   //  ?? this use effect does things
   // ?? 1. chatSlugConversation state --> to load conversations of slug (conversation id) we have to update this state. we are doing this because
+  //  ?? 2. Behalf of SLUG updating the welcome state --> (this state track is we are on welcome page to create new conversation).
   useEffect(() => {
     if (slug) {
       setChatSlugConversation({ id: slug, name: "" });
-    }
-  }, [slug]);
-  //  ?? Behalf of SLUG updating the welcome state --> (this state track is we are on welcome page to create new conversation).
-  useEffect(() => {
-    if (!slug) {
-      setIsWelcome(true);
-    } else {
       setIsWelcome(false);
+    } else {
+      setIsWelcome(true);
     }
   }, [slug]);
+
   // ?? here we are doing two main work:
   // ?? 1. if there have conversation and the query is not in loading phase then update the conversations array state by adding new conversations. so when page --> update --> conversations fetching query run and the conversationsData will be chnage and this useEffect will update the conversations state.
   // ?? 1.1 I can use the conversationsData state to populate all conversations to asidebar but when user creates then we have that conversation id and we want to append that new conversation item at first in asidebar but there have no state who can update so we are using state instead of conversationsData so we can add newer conversation items to it top that will show to asidebar.
   // ?? 2. checking is the conversationsData has reached full page so in conversationsData res we have total pages and by comparing with the current page state we can ensure is it reached the last page and when there have not pages left then update the setHasMore state to false so that page will be not update and no query run --> (we are checking hasMore state when to update page state in above).
   useEffect(() => {
     if (conversationsData?.conversations?.length > 0 && !conversationsLoading) {
+      console.log(":::::::: Adding Item to the conversations ::::::::");
       setConversations((prev) => [...prev, ...conversationsData.conversations]);
     }
     if (
@@ -190,7 +192,8 @@ const ChatBotDashboardLayout = ({
     ) {
       setHasMore(false);
     }
-  }, [conversationsData, page, conversationsLoading, router]);
+  }, [conversationsData, page, conversationsLoading]);
+  //   console.log("CONVERSATION LENGTH ::::: ", conversations.length);
   //  ?? this is important because when route will be change then conversations state will be trash and page will become 1 and the observer will be increment the page by 1 and this will become 2 and in above useEffect this will see the 2nd page conversations and put is to the conversations and we get lose our 1st page conversation item so to fix that when route will be chnage first set the page to 1 and then process will be follow again and in fecthing we have cached conversations data by page that will come instantely got it
   //   useEffect(() => {
   //     console.log(page);
@@ -254,6 +257,8 @@ const ChatBotDashboardLayout = ({
             loading={conversationsLoading}
             hasMore={hasMore}
             setIsCollapsed={setIsCollapsed}
+            conversationsLoading={conversationsLoading}
+            setLastConversationItemMounted={setLastConversationItemMounted}
           />
         </Asidebar>
         {children}
@@ -263,17 +268,13 @@ const ChatBotDashboardLayout = ({
 };
 export const AdminDashboardLayout = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState([]);
+  const [isResultFetching, setIsResultFetching] = useState(false);
   const router = useRouter();
   const pathname = router.pathname;
   return (
     <div className={css.css_1ne4u3u_builder_block}>
-      {/* <TransitionGroup component={null}>
-        <CSSTransition
-        in={isCollapsed}
-        classNames={'asidebar_container'}
-        appear={true}
-        >
-            <div key={"asidebar_container"}> */}
       <Asidebar
         setIsCollapsed={setIsCollapsed}
         isCollapsed={isCollapsed}
@@ -284,31 +285,49 @@ export const AdminDashboardLayout = ({ children }) => {
             <Link
               key={link.href}
               href={`/${link.href}`}
-              className={adminDashboard.css_9rto4r_builder_block}
+              className={adm_css.css_9rto4r_builder_block}
               style={{
                 background: pathname == link?.href ? "#343541" : "transparent",
               }}
             >
-              <span className={adminDashboard.link_btn_name}>{link.name}</span>
+              <span className={adm_css.link_btn_name}>{link.name}</span>
             </Link>
           ))}
         </div>
       </Asidebar>
-      {/* </div>
-        </CSSTransition>
-      </TransitionGroup> */}
       {isCollapsed && (
         <div style={{ margin: "1.5rem" }}>
           <CollapseIcon onClick={() => setIsCollapsed(false)} />
         </div>
       )}
       <div style={{ height: "100dvh", overflow: "auto", width: "100%" }}>
-        {children}
+        <div
+          style={{
+            paddingInline: "1.75rem",
+            paddingTop: "1.5rem",
+          }}
+        >
+          <SearchCustomer
+            setIsSearching={setIsSearching}
+            setSearchResult={setSearchResult}
+            setIsResultFetching={setIsResultFetching}
+          />
+          {isSearching && (
+            <SearchResult
+              searchResult={searchResult}
+              isResultFetching={isResultFetching}
+            />
+          )}
+        </div>
+        {!isSearching && children}
       </div>
     </div>
   );
 };
 const Asidebar = ({ children, setIsCollapsed, isCollapsed, ...props }) => {
+  const { meQuery } = useGlobalContext();
+  const router = useRouter();
+  console.log(meQuery);
   return (
     <aside
       className={css.asidebar}
@@ -324,6 +343,32 @@ const Asidebar = ({ children, setIsCollapsed, isCollapsed, ...props }) => {
           isCollapsed={isCollapsed}
         />
         <div style={{ ...(props.style ? props.style : {}) }}>{children}</div>
+        <div
+          style={{
+            height: "40px",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "0.2rem 0.75rem",
+          }}
+        >
+          <div
+            style={{
+              height: "30px",
+              width: "100%",
+              border: "1px solid rgba(299,299,299,0.4)",
+              fontSize: "0.8rem",
+              marginTop: "0px",
+              color: "rgba(299,299,299,0.8)",
+            }}
+            className={css.css_9rto4r_builder_block}
+            onClick={() => router.push("/auth/profile")}
+          >
+            {meQuery?.isLoading && "Loading Profile..."}
+            {!meQuery?.isLoading && meQuery?.data?.user?.email}
+          </div>
+        </div>
       </div>
     </aside>
   );
@@ -353,6 +398,8 @@ const ConversationAsideBar = ({
   hasMore,
   loading,
   setIsCollapsed,
+  conversationsLoading,
+  setLastConversationItemMounted,
 }) => {
   return (
     <>
@@ -370,6 +417,7 @@ const ConversationAsideBar = ({
         }}
       />
       {/* Conversations */}
+
       <Conversations
         chatSlugConversation={chatSlugConversation}
         conversations={conversations}
@@ -380,8 +428,153 @@ const ConversationAsideBar = ({
         sidebarRef={sidebarRef}
         setConversations={setConversations}
         setIsCollapsed={setIsCollapsed}
+        conversationsLoading={conversationsLoading}
+        setLastConversationItemMounted={setLastConversationItemMounted}
       />
     </>
+  );
+};
+const SearchCustomer = ({
+  setIsSearching,
+  setSearchResult,
+  setIsResultFetching,
+}) => {
+  const [searchStr, setSearchStr] = useState("");
+  const delay = 500;
+  let timerRef = useRef(null);
+  const { mutate, isLoading } = useMutation({
+    mutationFn: searchUserMutationFn,
+    onSuccess: (res) => {
+      setSearchResult((prev) => [...res.users]);
+    },
+  });
+  useEffect(() => {
+    setIsResultFetching(isLoading);
+  }, [isLoading]);
+  const searchInLocalMemory = (searchStr) => {
+    const users = queryClient
+      .getQueriesData(["users"])
+      ?.flatMap(([_, item]) => item.users);
+    if (users?.length > 0) {
+      const result = users?.filter(
+        (user) =>
+          user?.email.startsWith(searchStr) ||
+          user?.subscription?.customerId?.startsWith(searchStr)
+      );
+      setSearchResult(result);
+    }
+  };
+  const handleSearchStrChange = (e) => {
+    // console.log(e.target.value);
+    setSearchStr(e.target.value);
+    const value = e.target.value?.trim();
+    if (value == "" || !value) {
+      //   console.log("satisfied");
+      setIsSearching(false);
+      setSearchResult([]);
+      return;
+    }
+    setIsSearching(true);
+    if (timerRef.current) {
+      console.log("Clearing Timeot....");
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      searchInLocalMemory(value);
+      mutate(value);
+    }, delay);
+  };
+  return (
+    <div className={adm_css.searchBox}>
+      <input
+        type="text"
+        value={searchStr}
+        onChange={handleSearchStrChange}
+        placeholder="Search"
+      />
+    </div>
+  );
+};
+const SearchResult = ({ searchResult, isResultFetching, setSearchResult }) => {
+  return (
+    <div style={{ padding: "1rem 0" }}>
+      <h1 style={{ marginTop: "2rem" }}>
+        Results
+        {isResultFetching && <span style={{fontSize: "0.75rem", color: "rgba(299,299,299,0.6)", display: "inline-block", marginLeft: "1rem"}}> 
+           <Loader style={{width: "14px", marginRight: "0.6rem"}} />  Searching in DB...</span>}
+      </h1>
+      {/* <div style={{ padding: "1rem" }}>
+        {searchResult?.map((item) => {
+          return (
+            <div key={item.email}>
+              <div>{item.email}</div>
+              <div>{item.subscription?.customerId}</div>
+            </div>
+          );
+        })}
+        {isResultFetching && "Searching..."}
+      </div> */}
+      <div className={adm_css.wrapper}>
+        <table className={clsx(adm_css.table, adm_css.subscribers)}>
+          <thead className={adm_css.thead}>
+            <tr>
+              <th className={adm_css.th}>#</th>
+              <th className={adm_css.th}>Email</th>
+              <th className={adm_css.th}>Plan</th>
+              <th className={adm_css.th}>Status</th>
+              <th className={adm_css.th}>Subscribed On</th>
+              <th className={adm_css.th}>Next Billing</th>
+              <th className={adm_css.th}>Customer Id</th>
+              <th className={adm_css.th}>Invoice</th>
+              <th className={adm_css.th}>Canceled At</th>
+            </tr>
+          </thead>
+          <tbody style={{ position: "relative" }}>
+            {searchResult?.length > 0 &&
+              searchResult?.map((user, idx) => {
+                const subscription = user?.subscription;
+                const plan = subscription?.plan;
+                const status = subscription.status;
+                return (
+                  <tr key={user.id} className={adm_css.tr}>
+                    <td className={adm_css.td}>{idx + 1}</td>
+                    <td className={adm_css.td}>{user.email}</td>
+                    <td className={adm_css.td}>{plan}</td>
+                    <td className={adm_css.td}>{status}</td>
+                    <td className={adm_css.td}>
+                      {new Date(user.createdAt).toDateString()}
+                    </td>
+                    <td className={adm_css.td}>
+                      {new Date(subscription.periodEnd).toDateString()}
+                    </td>
+                    <td className={adm_css.td}>{subscription.customerId}</td>
+                    <td className={adm_css.td}>{subscription.invoice}</td>
+                    <td className={adm_css.td}>
+                      {subscription.cancel && new Date(subscription.canceledAt)}
+                    </td>
+                  </tr>
+                );
+              })}
+            {!searchResult && isResultFetching && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "0.75rem",
+                  position: "absolute",
+                  left: 0,
+                }}
+              >
+                <Loader className="spin_loader" />
+              </div>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* <Paginate setPage={setPage} page={page} totalPages={data?.totalPages} /> */}
+    </div>
   );
 };
 export const useChatDashboardContext = () => {

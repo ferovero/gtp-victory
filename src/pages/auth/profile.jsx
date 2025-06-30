@@ -11,7 +11,9 @@ import {
 import styles from "../../styles/profile.module.css";
 import AuthUserCAcess from "../../components/auth-user-can-access";
 import { useRouter } from "next/router";
-function ProfilePage({ query: { data: me, invalidate } }) {
+import Cookies from "js-cookie";
+import { queryClient } from "../../components/query-provider";
+function ProfilePage({ query: { data: me } }) {
   const [plan, setPlan] = useState({
     status: "subscribed",
     daysLeft: 0,
@@ -19,11 +21,25 @@ function ProfilePage({ query: { data: me, invalidate } }) {
   });
   const [user, setUser] = useState(null);
   const router = useRouter();
-  const { mutate: getBillingPortal, isPending } = useMutation({
+  const { mutate: getBillingPortal, isLoading: isPending } = useMutation({
     mutationFn: getBillingPortalMutationFn,
     onSuccess: (res) => {
       console.log(res);
       window.open(res.url, "_blank");
+    },
+  });
+  const { mutate: logoutMutate, isLoading: isLoggingOut } = useMutation({
+    mutationFn: logoutMutationFn,
+    onSuccess: () => {
+      Cookies.remove("gptvct_authnz");
+      Cookies.remove("gptvct_admin");
+      queryClient.invalidateQueries();
+      if (router) {
+        router.push("/");
+      }
+    },
+    onError: (err) => {
+      setError(err?.message || err?.errorMessage || "Something went wrong.");
     },
   });
   useEffect(() => {
@@ -97,25 +113,25 @@ function ProfilePage({ query: { data: me, invalidate } }) {
           <strong>Email:</strong> {user?.email}
         </p>
       </section>
-
-      <section className={styles.subscriptionSection}>
-        <h2>Subscription Details</h2>
-        {renderPlanDetails()}
-        <div className={styles.actions}>
-          {/* <button className={styles.cancelBtn}>Cancel Plan</button>
+      {!user?.isAdmin && (
+        <section className={styles.subscriptionSection}>
+          <h2>Subscription Details</h2>
+          {renderPlanDetails()}
+          <div className={styles.actions}>
+            {/* <button className={styles.cancelBtn}>Cancel Plan</button>
                         <button className={styles.upgradeBtn}>Upgrade</button> */}
-          <button
-            className={styles.linkBtn}
-            onClick={getBillingPortal}
-            disabled={isPending}
-          >
-            {" "}
-            Manage in Stripe Billing
-            {isPending ? <Loader className="spin_loader" /> : ""}
-          </button>
-        </div>
-      </section>
-
+            <button
+              className={styles.linkBtn}
+              onClick={getBillingPortal}
+              disabled={isPending}
+            >
+              {" "}
+              Manage in Stripe Billing
+              {isPending ? <Loader className="spin_loader" /> : ""}
+            </button>
+          </div>
+        </section>
+      )}
       <section className={styles.securitySection}>
         <h2>Security</h2>
         <div className={styles.actions}>
@@ -126,10 +142,11 @@ function ProfilePage({ query: { data: me, invalidate } }) {
             Forget Password
           </Link>
           <button
-            onClick={() => logoutMutationFn(router)}
+            onClick={logoutMutate}
             className={styles.linkBtn}
+            disabled={isLoggingOut}
           >
-            Logout
+            Logout {isLoggingOut && <Loader className="spin_loader" />}
           </button>
         </div>
       </section>

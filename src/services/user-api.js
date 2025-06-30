@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { USER } from "../lib/api-endpoints";
-import API from "../lib/axios-client"
+import API from "../lib/axios-client";
+import Cookies from "js-cookie";
+import { queryClient } from "../components/query-provider";
 export const getBillingPortalMutationFn = async () => API.get('/manage-billing');
 export const getAuthTokenMutationFn = async (token) => {
     const response = await API.get(`${USER.getAuthToken}/${token}`);
@@ -21,9 +23,6 @@ export const loginMutationFn = async (body) => {
 }
 export const logoutMutationFn = async (router = null) => {
     const response = await API.get("/auth/logout");
-    if (router) {
-        router.push("/");
-    }
     return response;
 }
 export const resetTokenSenderMutationFn = async (body) => {
@@ -63,5 +62,9 @@ export const createUserMutationFn = async (body) => {
 };
 export const deleteUserByAdminMutationFn = async (userId) => {
     const response = await API.delete("/user/admin-added/" + userId);
+    return response;
+}
+export const searchUserMutationFn = async (searchStr) => {
+    const response = await API.get('/user/all?search=' + searchStr);
     return response;
 }

@@ -71,3 +71,22 @@
   overflow: hidden;
   font-size: 0.9rem;
 }
+
+.searchBox {
+  width: 100%;
+  border: 1px solid white;
+  height: 40px;
+  position: relative;
+}
+.searchBox input {
+  width: 100%;
+  display: block;
+  height: 40px;
+  background-color: transparent;
+  color: white;
+  padding: 0 0.8rem;
+  outline: none;
+  border-radius: 0px;
+  border: none;
+  box-shadow: none;
+}

@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { resetTokenSenderMutationFn } from "../services/user-api";
+import { useRouter } from "next/router";
 const resetPSchema = z.object({
   email: z.string().email().trim().min(2),
   csrfToken: z.string().min(10),
@@ -12,14 +13,15 @@ const ResetTokenSender = () => {
   const [formValues, setFormValues] = useState({
     email: "",
   });
+  const router = useRouter();
   const [errors, setErrors] = useState({});
   // Mutation for Update Password
-  const { mutate: resetTokenSender, isPending: resetTokenSenderLoading } =
+  const { mutate: resetTokenSender, isLoading: resetTokenSenderLoading } =
     useMutation({
       mutationFn: resetTokenSenderMutationFn,
       onSuccess: () => {
         setErrors({});
-        window.location.href = "/reset-password-email-sent";
+        router.push("/reset-password-email-sent");
       },
       onError: (error) => {
         setErrors((prev) => ({
@@ -55,11 +57,11 @@ const ResetTokenSender = () => {
     }
     setErrors({ email: "" }); // clear error on change
   }, []);
-  const handleSubmit = useCallback((e) => {
-    e.preventDefault();
-    setFormValues((prev) => {
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
       const result = resetPSchema.safeParse({
-        ...prev,
+        ...formValues,
         csrfToken: authCSRFToken,
       });
       if (!result.success) {
@@ -71,10 +73,10 @@ const ResetTokenSender = () => {
         return prev;
       }
       // console.log({ resetCode: searchQuery.code, password: result.data.password, csrfToken: authCSRFToken });console.log(result.data);
-        resetTokenSender(result.data);
-      return prev;
-    });
-  }, []);
+      resetTokenSender(result.data);
+    },
+    [formValues]
+  );
   return (
     <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf css-yuvktl">
       <div

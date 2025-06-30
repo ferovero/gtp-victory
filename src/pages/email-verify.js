@@ -55,12 +55,10 @@ const EmailVerify = ({ subscriptionType }) => {
         }
         setErrors({ ...errors, [e.target.name]: '' }); // clear error on change
     };
-
     const handleSubmit = useCallback(async (e) => {
-        setFormValues(prev => {
             // console.log(process.env.NEXT_PUBLIC_SERVER_BASE_URL);
             e.preventDefault();
-            const result = emailSchema.safeParse(prev);
+            const result = emailSchema.safeParse(formValues);
             if (!result.success) {
                 // format errors
                 const fieldErrors = {};
@@ -68,22 +66,13 @@ const EmailVerify = ({ subscriptionType }) => {
                     fieldErrors[issue.path[0]] = issue.message;
                 }
                 setErrors(fieldErrors);
-                return prev;
             }
-            console.log({
-                email: result.data.email,
-                plan,
-                mode
-            });
             mutate({
                 email: result.data.email,
                 plan,
                 mode: mode
             });
-            return prev;
-        });
-    }, [mode]);
-
+    }, [mode, formValues]);
     return (
         <div className="builder-block builder-a9975e070b944e9fba7286598d81a5bf-- css-yuvktl--">
             <div className="builder-block builder-f6cd5c3d9f1c4f9ba4054de2b74352ae-- css-1rs33wg" builder-id="builder-f6cd5c3d9f1c4f9ba4054de2b74352ae">

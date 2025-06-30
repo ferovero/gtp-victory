@@ -15,7 +15,6 @@ const Subscribers = () => {
   const isLoading =
     subscribersQuery?.isLoading || subscribersQuery?.isRefetching;
   const users = data?.users;
-  console.log(isLoading);
   return (
     <AdminDashboardLayout>
       <div style={{ padding: "2rem" }}>
@@ -56,9 +55,10 @@ const Subscribers = () => {
                 <th className={styles.th}>Canceled At</th>
               </tr>
             </thead>
-            {users?.length > 0 && data && (
-              <tbody>
-                {users?.map((user, idx) => {
+            <tbody style={{position: "relative"}}>
+              {users?.length > 0 &&
+                data &&
+                users?.map((user, idx) => {
                   const subscription = user?.subscription;
                   const plan = subscription?.plan;
                   const status = subscription.status;
@@ -83,13 +83,12 @@ const Subscribers = () => {
                     </tr>
                   );
                 })}
-                {!users && isLoading && (
-                  <div style={{ width: "100%" }}>
-                    <Loader className="spin_loader" />
-                  </div>
-                )}
-              </tbody>
-            )}
+              {!users && isLoading && (
+                <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center",padding: "0.75rem", position: "absolute", left: 0 }}>
+                  <Loader className="spin_loader" />
+                </div>
+              )}
+            </tbody>
           </table>
         </div>
         <Paginate setPage={setPage} page={page} totalPages={data?.totalPages} />
