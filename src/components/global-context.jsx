@@ -15,7 +15,7 @@ const GlobalContextWrapper = ({ children }) => {
   const [conversations, setConversations] = useState([]);
   const [lastConversationItemMounted, setLastConversationItemMounted] =
     useState(false);
-  const [pendingChats, setIsPendingChats] = useState([]);
+  const [pendingChats, setIsPendingChats] = useState([]); // ?? Now no use of this
   const addedUserQuery = useAddedUsers();
   const subscribersQuery = useUsers(page);
   // {
@@ -26,7 +26,6 @@ const GlobalContextWrapper = ({ children }) => {
   // }
   const [chatBoardTitle, setChatBoardTitle] = useState("");
   const router = useRouter();
-  const [a, setA] = useState(false);
   const conversationsQuery = useConversations(page); // ?? it is tanstack useQuery hook to fetch the data
   const {
     data: conversation,

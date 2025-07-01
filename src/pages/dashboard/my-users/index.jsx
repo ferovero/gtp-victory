@@ -182,20 +182,17 @@ const CreatingUserForm = ({ setIsCreating, fetchUsersAddedByAdmin }) => {
   }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormValues((prev) => {
-      const result = userFormSchema.safeParse(prev);
-      if (!result.success) {
-        // format errors
-        const fieldErrors = {};
-        for (const issue of result.error.issues) {
-          fieldErrors[issue.path[0]] = issue.message;
-        }
-        setErrors(fieldErrors);
-        return prev;
+    const result = userFormSchema.safeParse(formValues);
+    if (!result.success) {
+      // format errors
+      const fieldErrors = {};
+      for (const issue of result.error.issues) {
+        fieldErrors[issue.path[0]] = issue.message;
       }
-      createUser({ ...prev });
-      return prev;
-    });
+      setErrors(fieldErrors);
+      return;
+    }
+    createUser({ ...formValues });
   };
   return (
     <form

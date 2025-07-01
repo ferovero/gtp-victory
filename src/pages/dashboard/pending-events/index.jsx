@@ -5,11 +5,9 @@ import { getAllWebEvents, postWebEvent } from "../../../services/webevent";
 const PendingEvents = () => {
   const [events, setEvents] = useState({});
   const [isLoading, setIsLoading] = useState({});
-  console.log(events);
   const fetchPendingEvents = async () => {
     try {
       const events = await getAllWebEvents();
-      console.log(events);
       setEvents(events?.webevents);
       setIsLoading({ general: false });
     } catch (error) {
@@ -107,7 +105,7 @@ const PendingEvents = () => {
             )}
           </>
         )}
-
+        {isLoading && <> Loading... </>}
         {events.length == 0 && !isLoading && <div>No pending events</div>}
       </div>
     </AdminDashboardLayout>

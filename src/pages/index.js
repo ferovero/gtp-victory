@@ -71,7 +71,6 @@ export default function Home({ page }) {
                 <title>{page?.data?.name || 'Builder Page'}</title>
             </Head>
             <BuilderComponent model="page" content={page} />
-            <button onClick={() => setIsOpen(true)}>On Off</button>
             {/* <SetLinks /> */}
             <Modal isOpen={isOpen} setIsOpen={setIsOpen}>
                 <EmailVerify subscriptionType={subscriptionType} />
